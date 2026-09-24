@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../logic/settings/settings_cubit.dart';
 import '../../../../logic/settings/settings_state.dart';
@@ -38,9 +39,8 @@ class PrintersSettingsScreen extends StatelessWidget {
       body: BlocConsumer<SettingsCubit, SettingsState>(
         listener: (context, state) {
           if (state.message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message!)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message!)));
           }
         },
         builder: (context, state) {
@@ -48,7 +48,10 @@ class PrintersSettingsScreen extends StatelessWidget {
           final defaultPrinter = state.defaultPrinter;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -58,11 +61,17 @@ class PrintersSettingsScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.primaryGreen.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.print, color: AppColors.primaryGreen, size: 30),
+                      const Icon(
+                        Icons.print,
+                        color: AppColors.primaryGreen,
+                        size: 30,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -70,12 +79,20 @@ class PrintersSettingsScreen extends StatelessWidget {
                           children: [
                             const Text(
                               'Device Scanning & Printer Management',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'USB Thermal Printers, Bluetooth Mobile Printers နှင့် Network LAN ပရင်တာများကို ချိတ်ဆက် အသုံးပြုနိုင်ပါသည်။',
-                              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -92,7 +109,10 @@ class PrintersSettingsScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Available Devices (${printers.length})',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     ElevatedButton.icon(
                       onPressed: state.isScanningPrinters
@@ -102,10 +122,17 @@ class PrintersSettingsScreen extends StatelessWidget {
                           ? const SizedBox(
                               width: 14,
                               height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Icon(Icons.refresh, size: 16),
-                      label: Text(state.isScanningPrinters ? 'Scanning...' : 'Scan Devices'),
+                      label: Text(
+                        state.isScanningPrinters
+                            ? 'Scanning...'
+                            : 'Scan Devices',
+                      ),
                     ),
                   ],
                 ),
@@ -118,17 +145,24 @@ class PrintersSettingsScreen extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: printers.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final printer = printers[index];
                       final isSelected = printer == defaultPrinter;
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: (isSelected ? AppColors.primaryGreen : Colors.grey).withOpacity(0.12),
+                          backgroundColor:
+                              (isSelected
+                                      ? AppColors.primaryGreen
+                                      : Colors.grey)
+                                  .withOpacity(0.12),
                           child: Icon(
                             Icons.print,
-                            color: isSelected ? AppColors.primaryGreen : Colors.grey,
+                            color: isSelected
+                                ? AppColors.primaryGreen
+                                : Colors.grey,
                             size: 20,
                           ),
                         ),
@@ -136,23 +170,35 @@ class PrintersSettingsScreen extends StatelessWidget {
                           printer,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                           ),
                         ),
                         subtitle: Text(
-                          isSelected ? 'Active Default Printer (လက်ရှိရွေးချယ်ထားသော ပရင်တာ)' : 'Ready to connect',
+                          isSelected
+                              ? 'Active Default Printer (လက်ရှိရွေးချယ်ထားသော ပရင်တာ)'
+                              : 'Ready to connect',
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? AppColors.primaryGreen : Colors.grey,
+                            color: isSelected
+                                ? AppColors.primaryGreen
+                                : Colors.grey,
                           ),
                         ),
                         trailing: Icon(
-                          isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                          color: isSelected ? AppColors.primaryGreen : Colors.grey,
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                          color: isSelected
+                              ? AppColors.primaryGreen
+                              : Colors.grey,
                           size: 22,
                         ),
                         onTap: () {
-                          context.read<SettingsCubit>().selectDefaultPrinter(printer);
+                          context.read<SettingsCubit>().selectDefaultPrinter(
+                            printer,
+                          );
                         },
                       );
                     },
@@ -170,19 +216,27 @@ class PrintersSettingsScreen extends StatelessWidget {
                       children: [
                         const Text(
                           'Test Print (စမ်းသပ်ပုံနှိပ်ခြင်း)',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'ရွေးချယ်ထားသော "$defaultPrinter" ပေါ်သို့ စမ်းသပ်စလစ် ထုတ်ကြည့်နိုင်ပါသည်။',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 14),
                         OutlinedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Test print sent to $defaultPrinter successfully!'),
+                                content: Text(
+                                  'Test print sent to $defaultPrinter successfully!',
+                                ),
                                 duration: const Duration(seconds: 2),
                               ),
                             );

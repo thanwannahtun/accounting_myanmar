@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../accounts/chart_of_accounts_screen.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
@@ -56,7 +57,9 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 NavigationRail(
                   selectedIndex: _currentIndex,
                   onDestinationSelected: _navigateToIndex,
-                  backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  backgroundColor: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   labelType: NavigationRailLabelType.all,
                   leading: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -68,11 +71,16 @@ class _MainShellScreenState extends State<MainShellScreen> {
                             color: AppColors.primaryGreen.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.account_balance, color: AppColors.primaryGreen, size: 28),
+                          child: const Icon(
+                            Icons.account_balance,
+                            color: AppColors.primaryGreen,
+                            size: 28,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'LedgerPro',
+                          'Accounting \nMyanmar',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -85,46 +93,65 @@ class _MainShellScreenState extends State<MainShellScreen> {
                   destinations: const [
                     NavigationRailDestination(
                       icon: Icon(Icons.dashboard_outlined),
-                      selectedIcon: Icon(Icons.dashboard, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.dashboard,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Dashboard'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.swap_horiz_outlined),
-                      selectedIcon: Icon(Icons.swap_horiz, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.swap_horiz,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Entries'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.menu_book_outlined),
-                      selectedIcon: Icon(Icons.menu_book, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.menu_book,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Accounts'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.format_list_numbered_outlined),
-                      selectedIcon: Icon(Icons.format_list_numbered, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.format_list_numbered,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Ledger'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.bar_chart_outlined),
-                      selectedIcon: Icon(Icons.bar_chart, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.bar_chart,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Reports'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.smart_toy_outlined),
-                      selectedIcon: Icon(Icons.smart_toy, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.smart_toy,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('AI Assistant'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.settings_outlined),
-                      selectedIcon: Icon(Icons.settings, color: AppColors.primaryGreen),
+                      selectedIcon: Icon(
+                        Icons.settings,
+                        color: AppColors.primaryGreen,
+                      ),
                       label: Text('Settings'),
                     ),
                   ],
                 ),
                 const VerticalDivider(width: 1, thickness: 1),
                 // Main Content View
-                Expanded(
-                  child: screens[_currentIndex],
-                ),
+                Expanded(child: screens[_currentIndex]),
               ],
             ),
           );
@@ -136,11 +163,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex > 4 ? 0 : _currentIndex,
             onDestinationSelected: (idx) {
-              if (idx == 5) {
-                _navigateToIndex(6); // Settings
-              } else {
-                _navigateToIndex(idx);
-              }
+              _navigateToIndex(idx);
             },
             destinations: const [
               NavigationDestination(
@@ -152,6 +175,11 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 icon: Icon(Icons.swap_horiz_outlined),
                 selectedIcon: Icon(Icons.swap_horiz),
                 label: 'Entries',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book),
+                label: 'Accounts',
               ),
               NavigationDestination(
                 icon: Icon(Icons.format_list_numbered_outlined),

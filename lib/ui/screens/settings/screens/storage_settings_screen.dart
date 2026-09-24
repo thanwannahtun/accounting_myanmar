@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../logic/account/account_cubit.dart';
 import '../../../../logic/journal/journal_entry_cubit.dart';
@@ -23,14 +24,16 @@ class StorageSettingsScreen extends StatelessWidget {
       body: BlocConsumer<SettingsCubit, SettingsState>(
         listener: (context, state) {
           if (state.message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message!)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message!)));
           }
         },
         builder: (context, state) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -43,11 +46,18 @@ class StorageSettingsScreen extends StatelessWidget {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.storage, color: AppColors.primaryGreen, size: 22),
+                            Icon(
+                              Icons.storage,
+                              color: AppColors.primaryGreen,
+                              size: 22,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Local SQLite Database Status',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -59,7 +69,10 @@ class StorageSettingsScreen extends StatelessWidget {
                             const Text('Total Chart of Accounts:'),
                             Text(
                               '${state.totalAccountsCount} Accounts',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Courier'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Courier',
+                              ),
                             ),
                           ],
                         ),
@@ -70,7 +83,10 @@ class StorageSettingsScreen extends StatelessWidget {
                             const Text('Total Journal Entries:'),
                             Text(
                               '${state.totalTransactionsCount} Transactions',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Courier'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Courier',
+                              ),
                             ),
                           ],
                         ),
@@ -80,14 +96,21 @@ class StorageSettingsScreen extends StatelessWidget {
                           children: [
                             const Text('Cloud MySQL Compatibility:'),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primaryGreen.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
                                 'Ready / Compatible',
-                                style: TextStyle(fontSize: 11, color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.primaryGreen,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -108,12 +131,18 @@ class StorageSettingsScreen extends StatelessWidget {
                       children: [
                         const Text(
                           'နမူနာဒေတာ စီမံခန့်ခွဲမှု (Sample Data)',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'စမ်းသပ်လေ့လာနိုင်ရန် မြန်မာစီးပွားရေးလုပ်ငန်းသုံး စာရင်းအကောင့်များနှင့် နေ့စဉ်စာရင်းသွင်းမှု နမူနာများကို ထည့်သွင်းခြင်း သို့မဟုတ် ရှင်းလင်းခြင်း ပြုလုပ်နိုင်သည်။',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -123,18 +152,25 @@ class StorageSettingsScreen extends StatelessWidget {
                                 onPressed: state.isLoadingSampleData
                                     ? null
                                     : () async {
-                                        final settingsCubit = context.read<SettingsCubit>();
-                                        final accountCubit = context.read<AccountCubit>();
-                                        final journalCubit = context.read<JournalEntryCubit>();
-                                        final ledgerCubit = context.read<GeneralLedgerCubit>();
-                                        final reportsCubit = context.read<FinancialReportsCubit>();
+                                        final settingsCubit = context
+                                            .read<SettingsCubit>();
+                                        final accountCubit = context
+                                            .read<AccountCubit>();
+                                        final journalCubit = context
+                                            .read<JournalEntryCubit>();
+                                        final ledgerCubit = context
+                                            .read<GeneralLedgerCubit>();
+                                        final reportsCubit = context
+                                            .read<FinancialReportsCubit>();
 
                                         await settingsCubit.loadSampleData();
                                         await accountCubit.loadAccounts();
                                         await journalCubit.loadJournalEntries();
 
-                                        final updatedAccounts = accountCubit.state.accounts;
-                                        final updatedEntries = journalCubit.state.entries;
+                                        final updatedAccounts =
+                                            accountCubit.state.accounts;
+                                        final updatedEntries =
+                                            journalCubit.state.entries;
 
                                         ledgerCubit.refresh(
                                           accounts: updatedAccounts,
@@ -153,18 +189,25 @@ class StorageSettingsScreen extends StatelessWidget {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () async {
-                                  final settingsCubit = context.read<SettingsCubit>();
-                                  final accountCubit = context.read<AccountCubit>();
-                                  final journalCubit = context.read<JournalEntryCubit>();
-                                  final ledgerCubit = context.read<GeneralLedgerCubit>();
-                                  final reportsCubit = context.read<FinancialReportsCubit>();
+                                  final settingsCubit = context
+                                      .read<SettingsCubit>();
+                                  final accountCubit = context
+                                      .read<AccountCubit>();
+                                  final journalCubit = context
+                                      .read<JournalEntryCubit>();
+                                  final ledgerCubit = context
+                                      .read<GeneralLedgerCubit>();
+                                  final reportsCubit = context
+                                      .read<FinancialReportsCubit>();
 
                                   await settingsCubit.clearSampleData();
                                   await accountCubit.loadAccounts();
                                   await journalCubit.loadJournalEntries();
 
-                                  final updatedAccounts = accountCubit.state.accounts;
-                                  final updatedEntries = journalCubit.state.entries;
+                                  final updatedAccounts =
+                                      accountCubit.state.accounts;
+                                  final updatedEntries =
+                                      journalCubit.state.entries;
 
                                   ledgerCubit.refresh(
                                     accounts: updatedAccounts,
@@ -175,7 +218,10 @@ class StorageSettingsScreen extends StatelessWidget {
                                     transactions: updatedEntries,
                                   );
                                 },
-                                icon: const Icon(Icons.cleaning_services, size: 18),
+                                icon: const Icon(
+                                  Icons.cleaning_services,
+                                  size: 18,
+                                ),
                                 label: const Text('Clear Sample'),
                               ),
                             ),
@@ -192,7 +238,10 @@ class StorageSettingsScreen extends StatelessWidget {
                 Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(color: Colors.red.withOpacity(0.5), width: 1.2),
+                    side: BorderSide(
+                      color: Colors.red.withOpacity(0.5),
+                      width: 1.2,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -205,7 +254,11 @@ class StorageSettingsScreen extends StatelessWidget {
                             SizedBox(width: 8),
                             Text(
                               'Danger Zone (အထူးသတိပြုရန်)',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
                             ),
                           ],
                         ),
@@ -223,26 +276,37 @@ class StorageSettingsScreen extends StatelessWidget {
                           onPressed: () async {
                             final settingsCubit = context.read<SettingsCubit>();
                             final accountCubit = context.read<AccountCubit>();
-                            final journalCubit = context.read<JournalEntryCubit>();
-                            final ledgerCubit = context.read<GeneralLedgerCubit>();
-                            final reportsCubit = context.read<FinancialReportsCubit>();
+                            final journalCubit = context
+                                .read<JournalEntryCubit>();
+                            final ledgerCubit = context
+                                .read<GeneralLedgerCubit>();
+                            final reportsCubit = context
+                                .read<FinancialReportsCubit>();
 
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
-                                title: const Text('ဒေတာအားလုံး ဖျက်မည်မှာ သေချာပါသလား?'),
+                                title: const Text(
+                                  'ဒေတာအားလုံး ဖျက်မည်မှာ သေချာပါသလား?',
+                                ),
                                 content: const Text(
                                   'စာရင်းဇယား (Chart of Accounts)၊ နေ့စဉ်အရောင်းအဝယ် (Journal Entries) နှင့် ဆက်တင်ဒေတာ အားလုံးကို အပြီးအပိုင် ရှင်းလင်းပါမည်။\n\nသတိပြုရန်: Backup ဒေတာ မရှိပါက ပြန်လည် မရရှိနိုင်ပါ။',
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
                                     child: const Text('မဖျက်တော့ပါ (Cancel)'),
                                   ),
                                   ElevatedButton(
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                    onPressed: () => Navigator.of(ctx).pop(true),
-                                    child: const Text('အားလုံးဖျက်မည် (Clear All)'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: const Text(
+                                      'အားလုံးဖျက်မည် (Clear All)',
+                                    ),
                                   ),
                                 ],
                               ),
@@ -253,12 +317,20 @@ class StorageSettingsScreen extends StatelessWidget {
                               await accountCubit.loadAccounts();
                               await journalCubit.loadJournalEntries();
 
-                              ledgerCubit.refresh(accounts: [], transactions: []);
-                              reportsCubit.recompute(accounts: [], transactions: []);
+                              ledgerCubit.refresh(
+                                accounts: [],
+                                transactions: [],
+                              );
+                              reportsCubit.recompute(
+                                accounts: [],
+                                transactions: [],
+                              );
                             }
                           },
                           icon: const Icon(Icons.delete_forever, size: 18),
-                          label: const Text('ဒေတာအားလုံး ရှင်းလင်းမည် (Clear All Data)'),
+                          label: const Text(
+                            'ဒေတာအားလုံး ရှင်းလင်းမည် (Clear All Data)',
+                          ),
                         ),
                       ],
                     ),

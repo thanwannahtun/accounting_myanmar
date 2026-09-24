@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../logic/settings/settings_cubit.dart';
 import '../../../../logic/settings/settings_state.dart';
 
@@ -46,18 +47,20 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   void _save() {
     final updated = context.read<SettingsCubit>().state.userProfile.copyWith(
-          ownerName: _ownerCtrl.text.trim(),
-          companyName: _companyCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim(),
-          email: _emailCtrl.text.trim(),
-          businessType: _businessTypeCtrl.text.trim(),
-          currency: _currencyCtrl.text.trim(),
-          fiscalYear: _fiscalYearCtrl.text.trim(),
-        );
+      ownerName: _ownerCtrl.text.trim(),
+      companyName: _companyCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      businessType: _businessTypeCtrl.text.trim(),
+      currency: _currencyCtrl.text.trim(),
+      fiscalYear: _fiscalYearCtrl.text.trim(),
+    );
 
     context.read<SettingsCubit>().saveUserProfile(updated);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('လုပ်ငန်းပရိုဖိုင် သိမ်းဆည်းပြီးပါပြီ။ (Profile saved)')),
+      const SnackBar(
+        content: Text('လုပ်ငန်းပရိုဖိုင် သိမ်းဆည်းပြီးပါပြီ။ (Profile saved)'),
+      ),
     );
   }
 
@@ -77,25 +80,55 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildField('Company / Business Name (ကုမ္ပဏီ/လုပ်ငန်းအမည်)', _companyCtrl),
+                _buildField(
+                  'Company / Business Name (ကုမ္ပဏီ/လုပ်ငန်းအမည်)',
+                  _companyCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Owner / Manager Name (ပိုင်ရှင်/မန်နေဂျာအမည်)', _ownerCtrl),
+                _buildField(
+                  'Owner / Manager Name (ပိုင်ရှင်/မန်နေဂျာအမည်)',
+                  _ownerCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Phone Number (ဖုန်းနံပါတ်)', _phoneCtrl, keyboardType: TextInputType.phone),
+                _buildField(
+                  'Phone Number (ဖုန်းနံပါတ်)',
+                  _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Email Address (အီးမေးလ်)', _emailCtrl, keyboardType: TextInputType.emailAddress),
+                _buildField(
+                  'Email Address (အီးမေးလ်)',
+                  _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Business Category (လုပ်ငန်းအမျိုးအစား)', _businessTypeCtrl),
+                _buildField(
+                  'Business Category (လုပ်ငန်းအမျိုးအစား)',
+                  _businessTypeCtrl,
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildField('Currency Symbol (ငွေကြေး)', _currencyCtrl)),
+                    Expanded(
+                      child: _buildField(
+                        'Currency Symbol (ငွေကြေး)',
+                        _currencyCtrl,
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildField('Fiscal Year (ဘဏ္ဍာရေးနှစ်)', _fiscalYearCtrl)),
+                    Expanded(
+                      child: _buildField(
+                        'Fiscal Year (ဘဏ္ဍာရေးနှစ်)',
+                        _fiscalYearCtrl,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 28),
@@ -115,11 +148,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, {TextInputType? keyboardType}) {
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl, {
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,

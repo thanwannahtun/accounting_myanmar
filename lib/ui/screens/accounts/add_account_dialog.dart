@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/account_types.dart';
 
 class AddAccountDialog extends StatefulWidget {
@@ -6,7 +7,8 @@ class AddAccountDialog extends StatefulWidget {
     required String code,
     required String name,
     required String type,
-  }) onSave;
+  })
+  onSave;
 
   const AddAccountDialog({super.key, required this.onSave});
 
@@ -45,33 +47,51 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('GL Code (စာရင်းကုဒ်)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const Text(
+              'GL Code (စာရင်းကုဒ်)',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 4),
             TextField(
               controller: _codeCtrl,
               decoration: const InputDecoration(
                 hintText: 'e.g. 6002',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
-            const Text('Account Name (အကောင့်အမည်)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const Text(
+              'Account Name (အကောင့်အမည်)',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 4),
             TextField(
               controller: _nameCtrl,
               decoration: const InputDecoration(
                 hintText: 'e.g. Fuel & Vehicle Maintenance',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Account Type (အမျိုးအစား)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const Text(
+              'Account Type (အမျိုးအစား)',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 4),
             DropdownButtonFormField<String>(
               initialValue: _selectedType,
               decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
               items: AccountTypes.all.map((t) {
                 return DropdownMenuItem(value: t, child: Text(t));
@@ -88,10 +108,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Save Account'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Save Account')),
       ],
     );
   }

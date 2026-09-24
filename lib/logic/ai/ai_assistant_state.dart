@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../data/models/ai_message.dart';
 

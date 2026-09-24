@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../logic/settings/settings_cubit.dart';
 import '../../../../logic/settings/settings_state.dart';
 
@@ -46,19 +47,23 @@ class _PrintConfigScreenState extends State<PrintConfigScreen> {
 
   void _save() {
     final updated = context.read<SettingsCubit>().state.printConfig.copyWith(
-          companyName: _companyCtrl.text.trim(),
-          title: _titleCtrl.text.trim(),
-          slogan: _sloganCtrl.text.trim(),
-          headerNote: _headerNoteCtrl.text.trim(),
-          footerNote: _footerNoteCtrl.text.trim(),
-          paperFormat: _paperFormat,
-          showSignatures: _showSignatures,
-          currencySymbol: _currencySymbol,
-        );
+      companyName: _companyCtrl.text.trim(),
+      title: _titleCtrl.text.trim(),
+      slogan: _sloganCtrl.text.trim(),
+      headerNote: _headerNoteCtrl.text.trim(),
+      footerNote: _footerNoteCtrl.text.trim(),
+      paperFormat: _paperFormat,
+      showSignatures: _showSignatures,
+      currencySymbol: _currencySymbol,
+    );
 
     context.read<SettingsCubit>().savePrintConfig(updated);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ပုံနှိပ်ပုံစံ ဆက်တင်များ သိမ်းဆည်းပြီးပါပြီ။ (Print settings saved)')),
+      const SnackBar(
+        content: Text(
+          'ပုံနှိပ်ပုံစံ ဆက်တင်များ သိမ်းဆည်းပြီးပါပြီ။ (Print settings saved)',
+        ),
+      ),
     );
   }
 
@@ -78,33 +83,68 @@ class _PrintConfigScreenState extends State<PrintConfigScreen> {
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildField('Company Header Name (ပုံနှိပ်ခေါင်းစီး အမည်)', _companyCtrl),
+                _buildField(
+                  'Company Header Name (ပုံနှိပ်ခေါင်းစီး အမည်)',
+                  _companyCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Company Slogan (ကြွေးကြော်သံ/ဆောင်ပုဒ်)', _sloganCtrl),
+                _buildField(
+                  'Company Slogan (ကြွေးကြော်သံ/ဆောင်ပုဒ်)',
+                  _sloganCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Report / Voucher Title (စာရွက်ခေါင်းစဉ်)', _titleCtrl),
+                _buildField(
+                  'Report / Voucher Title (စာရွက်ခေါင်းစဉ်)',
+                  _titleCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Header Confidential Note (အပေါ်မှတ်ချက်)', _headerNoteCtrl),
+                _buildField(
+                  'Header Confidential Note (အပေါ်မှတ်ချက်)',
+                  _headerNoteCtrl,
+                ),
                 const SizedBox(height: 16),
-                _buildField('Footer Notes (အောက်ခြေ နှုတ်ခွန်းဆက်/မှတ်ချက်)', _footerNoteCtrl, maxLines: 2),
+                _buildField(
+                  'Footer Notes (အောက်ခြေ နှုတ်ခွန်းဆက်/မှတ်ချက်)',
+                  _footerNoteCtrl,
+                  maxLines: 2,
+                ),
                 const SizedBox(height: 20),
 
                 // Paper Format Selector
-                const Text('Paper Size & Layout (စက္ကူအရွယ်အစား ရွေးချယ်မှု)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Paper Size & Layout (စက္ကူအရွယ်အစား ရွေးချယ်မှု)',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _paperFormat,
                   decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'A4', child: Text('Standard A4 Paper (Full Report Table)')),
-                    DropdownMenuItem(value: '80mm', child: Text('80mm Thermal POS Receipt Paper')),
-                    DropdownMenuItem(value: '58mm', child: Text('58mm Mobile Thermal Paper')),
+                    DropdownMenuItem(
+                      value: 'A4',
+                      child: Text('Standard A4 Paper (Full Report Table)'),
+                    ),
+                    DropdownMenuItem(
+                      value: '80mm',
+                      child: Text('80mm Thermal POS Receipt Paper'),
+                    ),
+                    DropdownMenuItem(
+                      value: '58mm',
+                      child: Text('58mm Mobile Thermal Paper'),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _paperFormat = val);
@@ -116,8 +156,14 @@ class _PrintConfigScreenState extends State<PrintConfigScreen> {
                 // Signature lines toggle
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Show Signatures Lines (လက်မှတ်ထိုးကွက်များ ထည့်သွင်းမည်)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  subtitle: const Text('Prepared By / Approved By လက်မှတ်ထိုးကွက်များ ထည့်ပေးမည်', style: TextStyle(fontSize: 11)),
+                  title: const Text(
+                    'Show Signatures Lines (လက်မှတ်ထိုးကွက်များ ထည့်သွင်းမည်)',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: const Text(
+                    'Prepared By / Approved By လက်မှတ်ထိုးကွက်များ ထည့်ပေးမည်',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   value: _showSignatures,
                   onChanged: (val) => setState(() => _showSignatures = val),
                 ),
@@ -139,11 +185,18 @@ class _PrintConfigScreenState extends State<PrintConfigScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, {int maxLines = 1}) {
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl, {
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,

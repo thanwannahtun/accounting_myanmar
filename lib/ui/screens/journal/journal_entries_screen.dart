@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/journal_entry_line.dart';
 import '../../../logic/account/account_cubit.dart';
@@ -20,34 +21,35 @@ class JournalEntriesScreen extends StatelessWidget {
       barrierDismissible: false,
       builder: (dialogCtx) => AddJournalEntryDialog(
         accounts: accounts,
-        onSave: ({
-          required String date,
-          required String description,
-          required List<JournalEntryLine> lines,
-        }) async {
-          final journalCubit = context.read<JournalEntryCubit>();
-          final accountCubit = context.read<AccountCubit>();
-          final ledgerCubit = context.read<GeneralLedgerCubit>();
-          final reportsCubit = context.read<FinancialReportsCubit>();
+        onSave:
+            ({
+              required String date,
+              required String description,
+              required List<JournalEntryLine> lines,
+            }) async {
+              final journalCubit = context.read<JournalEntryCubit>();
+              final accountCubit = context.read<AccountCubit>();
+              final ledgerCubit = context.read<GeneralLedgerCubit>();
+              final reportsCubit = context.read<FinancialReportsCubit>();
 
-          await journalCubit.addJournalEntry(
-            date: date,
-            description: description,
-            lines: lines,
-          );
+              await journalCubit.addJournalEntry(
+                date: date,
+                description: description,
+                lines: lines,
+              );
 
-          final updatedAccounts = accountCubit.state.accounts;
-          final updatedEntries = journalCubit.state.entries;
+              final updatedAccounts = accountCubit.state.accounts;
+              final updatedEntries = journalCubit.state.entries;
 
-          ledgerCubit.refresh(
-            accounts: updatedAccounts,
-            transactions: updatedEntries,
-          );
-          reportsCubit.recompute(
-            accounts: updatedAccounts,
-            transactions: updatedEntries,
-          );
-        },
+              ledgerCubit.refresh(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+              reportsCubit.recompute(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+            },
       ),
     );
   }
@@ -73,7 +75,10 @@ class JournalEntriesScreen extends StatelessWidget {
         onPressed: () => _openAddEntryDialog(context),
         backgroundColor: AppColors.primaryGreen,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text(
+          'New Entry',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
       body: BlocBuilder<JournalEntryCubit, JournalEntryState>(
         builder: (context, state) {
@@ -85,7 +90,11 @@ class JournalEntriesScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.menu_book, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[400]),
+                  Icon(
+                    Icons.menu_book,
+                    size: 64,
+                    color: isDark ? Colors.grey[700] : Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'စာရင်းသွင်းထားမှု မရှိသေးပါ (No Journal Entries)',
@@ -94,7 +103,10 @@ class JournalEntriesScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     '+ New Entry ကိုနှိပ်၍ စာရင်း စတင်ရေးသွင်းပါ',
-                    style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -102,7 +114,12 @@ class JournalEntriesScreen extends StatelessWidget {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 80),
+            padding: EdgeInsets.only(
+              left: MediaQuery.sizeOf(context).width * 0.05,
+              right: MediaQuery.sizeOf(context).width * 0.05,
+              top: 12,
+              bottom: 80,
+            ),
             itemCount: entries.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
@@ -115,8 +132,13 @@ class JournalEntriesScreen extends StatelessWidget {
                   children: [
                     // Entry Header
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      color: isDark ? const Color(0xFF14241B) : const Color(0xFFF1F5F2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      color: isDark
+                          ? const Color(0xFF14241B)
+                          : const Color(0xFFF1F5F2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -129,13 +151,18 @@ class JournalEntriesScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   tx.description,
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -143,44 +170,78 @@ class JournalEntriesScreen extends StatelessWidget {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.grey.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   '#${tx.id}',
-                                  style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 18),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                ),
                                 color: Colors.grey,
                                 tooltip: 'Delete entry',
                                 onPressed: () async {
-                                  final journalCubit = context.read<JournalEntryCubit>();
-                                  final accountCubit = context.read<AccountCubit>();
-                                  final ledgerCubit = context.read<GeneralLedgerCubit>();
-                                  final reportsCubit = context.read<FinancialReportsCubit>();
+                                  final journalCubit = context
+                                      .read<JournalEntryCubit>();
+                                  final accountCubit = context
+                                      .read<AccountCubit>();
+                                  final ledgerCubit = context
+                                      .read<GeneralLedgerCubit>();
+                                  final reportsCubit = context
+                                      .read<FinancialReportsCubit>();
 
                                   final confirm = await showDialog<bool>(
                                     context: context,
                                     builder: (ctx) => AlertDialog(
-                                      title: const Text('စာရင်းဖျက်မည်လား? (Delete Entry)'),
-                                      content: Text('"${tx.description}" အား ဖျက်ပစ်ရန် သေချာပါသလား?'),
+                                      title: const Text(
+                                        'စာရင်းဖျက်မည်လား? (Delete Entry)',
+                                      ),
+                                      content: Text(
+                                        '"${tx.description}" အား ဖျက်ပစ်ရန် သေချာပါသလား?',
+                                      ),
                                       actions: [
-                                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-                                        TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(true),
+                                          child: const Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   );
 
                                   if (confirm == true) {
-                                    await journalCubit.deleteJournalEntry(tx.id);
+                                    await journalCubit.deleteJournalEntry(
+                                      tx.id,
+                                    );
 
-                                    final updatedAccounts = accountCubit.state.accounts;
-                                    final updatedEntries = journalCubit.state.entries;
+                                    final updatedAccounts =
+                                        accountCubit.state.accounts;
+                                    final updatedEntries =
+                                        journalCubit.state.entries;
 
                                     ledgerCubit.refresh(
                                       accounts: updatedAccounts,
@@ -206,25 +267,66 @@ class JournalEntriesScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              const Expanded(flex: 5, child: Text('Account', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey))),
-                              Expanded(flex: 3, child: Text('Debit', textAlign: TextAlign.right, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[600]))),
-                              Expanded(flex: 3, child: Text('Credit', textAlign: TextAlign.right, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[600]))),
+                              const Expanded(
+                                flex: 5,
+                                child: Text(
+                                  'Account',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Debit',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  'Credit',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                           const Divider(height: 12),
                           ...tx.lines.map((l) {
-                            final acc = accounts.where((a) => a.id == l.accountId).firstOrNull;
-                            final accLabel = acc != null ? '${acc.code} - ${acc.name}' : l.accountId;
+                            final acc = accounts
+                                .where((a) => a.id == l.accountId)
+                                .firstOrNull;
+                            final accLabel = acc != null
+                                ? '${acc.code} - ${acc.name}'
+                                : l.accountId;
 
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4.0,
+                              ),
                               child: Row(
                                 children: [
                                   Expanded(
                                     flex: 5,
                                     child: Text(
                                       accLabel,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -232,7 +334,9 @@ class JournalEntriesScreen extends StatelessWidget {
                                   Expanded(
                                     flex: 3,
                                     child: Text(
-                                      l.debit > 0 ? numberFormat.format(l.debit) : '-',
+                                      l.debit > 0
+                                          ? numberFormat.format(l.debit)
+                                          : '-',
                                       textAlign: TextAlign.right,
                                       style: const TextStyle(
                                         fontFamily: 'Courier',
@@ -245,7 +349,9 @@ class JournalEntriesScreen extends StatelessWidget {
                                   Expanded(
                                     flex: 3,
                                     child: Text(
-                                      l.credit > 0 ? numberFormat.format(l.credit) : '-',
+                                      l.credit > 0
+                                          ? numberFormat.format(l.credit)
+                                          : '-',
                                       textAlign: TextAlign.right,
                                       style: const TextStyle(
                                         fontFamily: 'Courier',

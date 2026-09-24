@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../logic/account/account_cubit.dart';
@@ -40,13 +41,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final transactions = journalCubit.state.entries;
 
     context.read<GeneralLedgerCubit>().refresh(
-          accounts: accounts,
-          transactions: transactions,
-        );
+      accounts: accounts,
+      transactions: transactions,
+    );
     context.read<FinancialReportsCubit>().recompute(
-          accounts: accounts,
-          transactions: transactions,
-        );
+      accounts: accounts,
+      transactions: transactions,
+    );
 
     final isFirstTime = settingsCubit.state.isFirstTime;
     if (isFirstTime) {
@@ -64,7 +65,9 @@ class _SplashScreenState extends State<SplashScreen> {
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Row(
             children: [
               Icon(Icons.auto_stories, color: AppColors.primaryGreen, size: 28),
@@ -85,7 +88,9 @@ class _SplashScreenState extends State<SplashScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                await context.read<SettingsCubit>().markFirstTimePromptCompleted();
+                await context
+                    .read<SettingsCubit>()
+                    .markFirstTimePromptCompleted();
                 if (!mounted) return;
                 Navigator.of(context).pushReplacementNamed(RouteNames.app);
               },
@@ -113,7 +118,9 @@ class _SplashScreenState extends State<SplashScreen> {
         return PopScope(
           canPop: false,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             content: const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Column(
@@ -152,13 +159,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final transactions = journalCubit.state.entries;
 
     context.read<GeneralLedgerCubit>().refresh(
-          accounts: accounts,
-          transactions: transactions,
-        );
+      accounts: accounts,
+      transactions: transactions,
+    );
     context.read<FinancialReportsCubit>().recompute(
-          accounts: accounts,
-          transactions: transactions,
-        );
+      accounts: accounts,
+      transactions: transactions,
+    );
 
     // Dismiss loading dialog and navigate to app
     Navigator.of(context, rootNavigator: true).pop();

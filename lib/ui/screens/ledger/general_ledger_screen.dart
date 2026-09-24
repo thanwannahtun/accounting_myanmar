@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../logic/account/account_cubit.dart';
 import '../../../logic/journal/journal_entry_cubit.dart';
@@ -28,12 +29,17 @@ class GeneralLedgerScreen extends StatelessWidget {
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       },
       builder: (context, state) {
-        final selectedAccount = state.selectedAccount ?? (accounts.isNotEmpty ? accounts.first : null);
+        final selectedAccount =
+            state.selectedAccount ??
+            (accounts.isNotEmpty ? accounts.first : null);
         final ledgerEntries = state.entries;
         final endingBalance = state.endingBalance;
 
@@ -44,12 +50,20 @@ class GeneralLedgerScreen extends StatelessWidget {
               // Export CSV Button
               IconButton(
                 tooltip: 'Export CSV',
-                icon: const Icon(Icons.file_download_outlined, color: AppColors.primaryGreen),
+                icon: const Icon(
+                  Icons.file_download_outlined,
+                  color: AppColors.primaryGreen,
+                ),
                 onPressed: selectedAccount == null
                     ? null
                     : () async {
-                        final printConfig = context.read<SettingsCubit>().state.printConfig;
-                        final res = await context.read<GeneralLedgerCubit>().exportCsv(printConfig);
+                        final printConfig = context
+                            .read<SettingsCubit>()
+                            .state
+                            .printConfig;
+                        final res = await context
+                            .read<GeneralLedgerCubit>()
+                            .exportCsv(printConfig);
                         if (res != null && context.mounted) {
                           showDialog(
                             context: context,
@@ -61,13 +75,24 @@ class GeneralLedgerScreen extends StatelessWidget {
               // Print Preview Button
               IconButton(
                 tooltip: 'Print Ledger',
-                icon: const Icon(Icons.print_outlined, color: AppColors.primaryGreen),
+                icon: const Icon(
+                  Icons.print_outlined,
+                  color: AppColors.primaryGreen,
+                ),
                 onPressed: selectedAccount == null
                     ? null
                     : () {
-                        final printConfig = context.read<SettingsCubit>().state.printConfig;
-                        final defaultPrinter = context.read<SettingsCubit>().state.defaultPrinter;
-                        final doc = context.read<GeneralLedgerCubit>().preparePrint(printConfig);
+                        final printConfig = context
+                            .read<SettingsCubit>()
+                            .state
+                            .printConfig;
+                        final defaultPrinter = context
+                            .read<SettingsCubit>()
+                            .state
+                            .defaultPrinter;
+                        final doc = context
+                            .read<GeneralLedgerCubit>()
+                            .preparePrint(printConfig);
                         if (doc != null && context.mounted) {
                           showDialog(
                             context: context,
@@ -82,7 +107,10 @@ class GeneralLedgerScreen extends StatelessWidget {
             ],
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -94,22 +122,30 @@ class GeneralLedgerScreen extends StatelessWidget {
                         isExpanded: true,
                         initialValue: selectedAccount?.id,
                         decoration: const InputDecoration(
-                          labelText: 'Select Account (စာရင်းခေါင်းစဉ် ရွေးချယ်ပါ)',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          labelText:
+                              'Select Account (စာရင်းခေါင်းစဉ် ရွေးချယ်ပါ)',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                         items: accounts.map((acc) {
                           return DropdownMenuItem<String>(
                             value: acc.id,
-                            child: Text('${acc.code} - ${acc.name} (${acc.type})'),
+                            child: Text(
+                              '${acc.code} - ${acc.name} (${acc.type})',
+                            ),
                           );
                         }).toList(),
                         onChanged: (val) {
                           if (val != null) {
-                            final picked = accounts.firstWhere((a) => a.id == val);
+                            final picked = accounts.firstWhere(
+                              (a) => a.id == val,
+                            );
                             context.read<GeneralLedgerCubit>().selectAccount(
-                                  account: picked,
-                                  transactions: transactions,
-                                );
+                              account: picked,
+                              transactions: transactions,
+                            );
                           }
                         },
                       ),
@@ -135,11 +171,16 @@ class GeneralLedgerScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       selectedAccount.name,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(width: 8),
-                                    AccountTypeBadge(type: selectedAccount.type),
+                                    AccountTypeBadge(
+                                      type: selectedAccount.type,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
@@ -147,7 +188,9 @@ class GeneralLedgerScreen extends StatelessWidget {
                                   'GL Code: ${selectedAccount.code}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],
@@ -160,7 +203,9 @@ class GeneralLedgerScreen extends StatelessWidget {
                                 'လက်ကျန်ငွေ (Ending Balance)',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -189,18 +234,31 @@ class GeneralLedgerScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        color: isDark ? const Color(0xFF14241B) : const Color(0xFFF1F5F2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        color: isDark
+                            ? const Color(0xFF14241B)
+                            : const Color(0xFFF1F5F2),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
                               'အရောင်းအဝယ်မှတ်တမ်း (Transaction History)',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                             Text(
                               '${ledgerEntries.length} Records',
-                              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -225,19 +283,72 @@ class GeneralLedgerScreen extends StatelessWidget {
                             horizontalMargin: 16,
                             columnSpacing: 24,
                             columns: const [
-                              DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(label: Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                              DataColumn(numeric: true, label: Text('Debit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primaryGreen))),
-                              DataColumn(numeric: true, label: Text('Credit', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.creditRose))),
-                              DataColumn(numeric: true, label: Text('Running Balance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.assetBlue))),
+                              DataColumn(
+                                label: Text(
+                                  'Date',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Description',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                numeric: true,
+                                label: Text(
+                                  'Debit',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                numeric: true,
+                                label: Text(
+                                  'Credit',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: AppColors.creditRose,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                numeric: true,
+                                label: Text(
+                                  'Running Balance',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: AppColors.assetBlue,
+                                  ),
+                                ),
+                              ),
                             ],
                             rows: ledgerEntries.map((e) {
                               return DataRow(
                                 cells: [
-                                  DataCell(Text(e.date, style: const TextStyle(fontSize: 12))),
+                                  DataCell(
+                                    Text(
+                                      e.date,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
                                   DataCell(
                                     ConstrainedBox(
-                                      constraints: const BoxConstraints(maxWidth: 220),
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 220,
+                                      ),
                                       child: Text(
                                         e.description,
                                         style: const TextStyle(fontSize: 12),
@@ -247,7 +358,9 @@ class GeneralLedgerScreen extends StatelessWidget {
                                   ),
                                   DataCell(
                                     Text(
-                                      e.debit > 0 ? numberFormat.format(e.debit) : '-',
+                                      e.debit > 0
+                                          ? numberFormat.format(e.debit)
+                                          : '-',
                                       style: const TextStyle(
                                         fontFamily: 'Courier',
                                         fontSize: 12,
@@ -258,7 +371,9 @@ class GeneralLedgerScreen extends StatelessWidget {
                                   ),
                                   DataCell(
                                     Text(
-                                      e.credit > 0 ? numberFormat.format(e.credit) : '-',
+                                      e.credit > 0
+                                          ? numberFormat.format(e.credit)
+                                          : '-',
                                       style: const TextStyle(
                                         fontFamily: 'Courier',
                                         fontSize: 12,

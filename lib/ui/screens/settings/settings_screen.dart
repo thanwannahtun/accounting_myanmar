@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../cubit/theme_mode/theme_mode_cubit.dart';
 import '../../../logic/settings/settings_cubit.dart';
@@ -19,15 +20,16 @@ class SettingsScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings (ဆက်တင်များ)'),
-      ),
+      appBar: AppBar(title: const Text('Settings (ဆက်တင်များ)')),
       body: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           final profile = state.userProfile;
 
           return ListView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             children: [
               // Business Profile Banner Card
               Card(
@@ -37,8 +39,14 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 26,
-                        backgroundColor: AppColors.primaryGreen.withOpacity(0.15),
-                        child: const Icon(Icons.business, color: AppColors.primaryGreen, size: 28),
+                        backgroundColor: AppColors.primaryGreen.withOpacity(
+                          0.15,
+                        ),
+                        child: const Icon(
+                          Icons.business,
+                          color: AppColors.primaryGreen,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -47,20 +55,29 @@ class SettingsScreen extends StatelessWidget {
                           children: [
                             Text(
                               profile.companyName,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${profile.ownerName} • ${profile.businessType}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Fiscal Year: ${profile.fiscalYear} | Currency: ${profile.currency}',
-                              style: const TextStyle(fontSize: 11, color: AppColors.primaryGreen, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -81,12 +98,16 @@ class SettingsScreen extends StatelessWidget {
                       icon: Icons.smart_toy,
                       iconColor: AppColors.primaryGreen,
                       title: 'AI Configuration (AI ဆက်တင်များ)',
-                      subtitle: state.geminiApiKey != null && state.geminiApiKey!.isNotEmpty
+                      subtitle:
+                          state.geminiApiKey != null &&
+                              state.geminiApiKey!.isNotEmpty
                           ? 'Gemini API Key: Configured (သိမ်းဆည်းပြီး)'
                           : 'Gemini API Key: Not configured (မထည့်ရသေး)',
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AiSettingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AiSettingsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -98,7 +119,9 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: 'Load sample data, clear sample, backup warning, SQLite stats',
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const StorageSettingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const StorageSettingsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -107,10 +130,13 @@ class SettingsScreen extends StatelessWidget {
                       icon: Icons.person_outline,
                       iconColor: AppColors.equityPurple,
                       title: 'Profile Management (လုပ်ငန်းပရိုဖိုင်)',
-                      subtitle: 'Company details, owner name, phone, email, currency',
+                      subtitle:
+                          'Company details, owner name, phone, email, currency',
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ProfileSettingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const ProfileSettingsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -121,7 +147,10 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Section: Printing & Hardware
-              _buildSectionTitle('PRINTING & HARDWARE (ပုံနှိပ်ခြင်းနှင့် စက်ပစ္စည်း)', isDark),
+              _buildSectionTitle(
+                'PRINTING & HARDWARE (ပုံနှိပ်ခြင်းနှင့် စက်ပစ္စည်း)',
+                isDark,
+              ),
               Card(
                 child: Column(
                   children: [
@@ -132,7 +161,9 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: 'Active: ${state.defaultPrinter}',
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const PrintersSettingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const PrintersSettingsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -140,11 +171,15 @@ class SettingsScreen extends StatelessWidget {
                     _buildSettingsTile(
                       icon: Icons.receipt_long,
                       iconColor: Colors.deepOrange,
-                      title: 'Print Format Configuration (ပုံနှိပ်ပုံစံ ဆက်တင်)',
-                      subtitle: 'Header, slogan, footer, paper format (${state.printConfig.paperFormat}), signatures',
+                      title:
+                          'Print Format Configuration (ပုံနှိပ်ပုံစံ ဆက်တင်)',
+                      subtitle:
+                          'Header, slogan, footer, paper format (${state.printConfig.paperFormat}), signatures',
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const PrintConfigScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const PrintConfigScreen(),
+                          ),
                         );
                       },
                     ),
@@ -155,7 +190,10 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Section: App Appearance & Language
-              _buildSectionTitle('PREFERENCES (အသွင်အပြင်နှင့် ဘာသာစကား)', isDark),
+              _buildSectionTitle(
+                'PREFERENCES (အသွင်အပြင်နှင့် ဘာသာစကား)',
+                isDark,
+              ),
               Card(
                 child: Column(
                   children: [
@@ -164,21 +202,45 @@ class SettingsScreen extends StatelessWidget {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: Colors.amber.withOpacity(0.12),
-                            child: const Icon(Icons.brightness_6, color: Colors.amber, size: 20),
+                            child: const Icon(
+                              Icons.brightness_6,
+                              color: Colors.amber,
+                              size: 20,
+                            ),
                           ),
-                          title: const Text('Theme Mode (အရောင်ပုံစံ)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          subtitle: Text('Current: ${themeMode.name.toUpperCase()}', style: const TextStyle(fontSize: 11)),
+                          title: const Text(
+                            'Theme Mode (အရောင်ပုံစံ)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Current: ${themeMode.name.toUpperCase()}',
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           trailing: DropdownButton<ThemeMode>(
                             value: themeMode,
                             underline: const SizedBox(),
                             items: const [
-                              DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                              DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                              DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                              DropdownMenuItem(
+                                value: ThemeMode.system,
+                                child: Text('System'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.light,
+                                child: Text('Light'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.dark,
+                                child: Text('Dark'),
+                              ),
                             ],
                             onChanged: (mode) {
                               if (mode != null) {
-                                context.read<ThemeModeCubit>().toggleTheme(mode);
+                                context.read<ThemeModeCubit>().toggleTheme(
+                                  mode,
+                                );
                               }
                             },
                           ),
@@ -189,11 +251,28 @@ class SettingsScreen extends StatelessWidget {
                     ListTile(
                       leading: CircleAvatar(
                         backgroundColor: Colors.blue.withOpacity(0.12),
-                        child: const Icon(Icons.language, color: Colors.blue, size: 20),
+                        child: const Icon(
+                          Icons.language,
+                          color: Colors.blue,
+                          size: 20,
+                        ),
                       ),
-                      title: const Text('Language (ဘာသာစကား)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                      subtitle: const Text('Current: မြန်မာ (Unicode) / English', style: TextStyle(fontSize: 11)),
-                      trailing: const Icon(Icons.check, color: AppColors.primaryGreen, size: 20),
+                      title: const Text(
+                        'Language (ဘာသာစကား)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Current: မြန်မာ (Unicode) / English',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      trailing: const Icon(
+                        Icons.check,
+                        color: AppColors.primaryGreen,
+                        size: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -210,15 +289,28 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.info_outline, size: 20, color: AppColors.primaryGreen),
+                          Icon(
+                            Icons.info_outline,
+                            size: 20,
+                            color: AppColors.primaryGreen,
+                          ),
                           SizedBox(width: 8),
-                          Text('Accounting Myanmar v1.0.0 (PHASE_1)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Accounting Myanmar v1.0.0 (PHASE_1)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Clean Green Architecture • Double-Entry Bookkeeping Standard • Local SQLite Engine with MySQL Cloud Sync Compatibility',
-                        style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
@@ -259,7 +351,10 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: iconColor.withOpacity(0.12),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(
         subtitle,
         style: const TextStyle(fontSize: 11),

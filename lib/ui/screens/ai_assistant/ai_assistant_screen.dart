@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/bloc_utils/bloc_status.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../logic/ai/ai_assistant_cubit.dart';
@@ -73,19 +74,15 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Row(
-              children: [
-                Icon(Icons.smart_toy, color: AppColors.primaryGreen, size: 22),
-                SizedBox(width: 8),
-                Text('AI စာရင်းကိုင် လက်ထောက် (AI Assistant)'),
-              ],
-            ),
+            title: Text('AI စာရင်းကိုင် လက်ထောက် (AI Assistant)'),
             actions: [
               IconButton(
                 tooltip: 'API Key ပြင်ဆင်ရန်',
                 icon: Icon(
                   Icons.key,
-                  color: state.hasApiKey ? AppColors.primaryGreen : Colors.orange,
+                  color: state.hasApiKey
+                      ? AppColors.primaryGreen
+                      : Colors.orange,
                   size: 20,
                 ),
                 onPressed: () => _showApiKeyDialog(context),
@@ -93,7 +90,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               IconButton(
                 tooltip: 'စကားဝိုင်း အသစ်စတင်ရန် (Clear)',
                 icon: const Icon(Icons.refresh, size: 20),
-                onPressed: () => context.read<AiAssistantCubit>().clearConversation(),
+                onPressed: () =>
+                    context.read<AiAssistantCubit>().clearConversation(),
               ),
             ],
           ),
@@ -104,19 +102,34 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 InkWell(
                   onTap: () => _showApiKeyDialog(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     color: Colors.orange.withOpacity(0.15),
                     child: const Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange,
+                          size: 18,
+                        ),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Gemini API Key မထည့်ရသေးပါ။ နှိပ်၍ API Key ထည့်သွင်းပါ။',
-                            style: TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                        Icon(Icons.chevron_right, color: Colors.orange, size: 18),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Colors.orange,
+                          size: 18,
+                        ),
                       ],
                     ),
                   ),
@@ -126,9 +139,13 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               Expanded(
                 child: ListView.separated(
                   controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                    vertical: 16,
+                  ),
                   itemCount: messages.length + (isLoading ? 1 : 0),
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     if (index == messages.length && isLoading) {
                       return _buildLoadingBubble(isDark);
@@ -144,7 +161,10 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
               if (messages.length <= 2)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                    vertical: 6,
+                  ),
                   child: Row(
                     children: [
                       _buildSuggestionChip('Double-entry စာရင်းရေးနည်း'),
@@ -157,12 +177,19 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
 
               // Bottom Input Bar
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   border: Border(
                     top: BorderSide(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
                     ),
                   ),
                 ),
@@ -176,8 +203,16 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                           maxLines: 4,
                           decoration: InputDecoration(
                             hintText: 'စာရင်းရေးသွင်းပုံ၊ Debit/Credit နှင့် ပတ်သက်ပြီး မေးပါ...',
-                            hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[400]),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            hintStyle: TextStyle(
+                              fontSize: 12,
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[400],
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                           ),
                           onSubmitted: (_) => _sendMessage(),
                         ),
@@ -188,7 +223,11 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                           backgroundColor: AppColors.primaryGreen,
                         ),
                         onPressed: isLoading ? null : _sendMessage,
-                        icon: const Icon(Icons.send, color: Colors.white, size: 18),
+                        icon: const Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                     ],
                   ),
@@ -227,7 +266,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.82,
+        ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -243,7 +284,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             border: isUser
                 ? null
                 : Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
           ),
           child: SelectableText(
@@ -251,7 +294,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             style: TextStyle(
               fontSize: 13,
               height: 1.45,
-              color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
+              color: isUser
+                  ? Colors.white
+                  : (isDark ? Colors.white : Colors.black87),
             ),
           ),
         ),

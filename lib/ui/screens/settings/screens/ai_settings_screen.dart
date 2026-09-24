@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../logic/ai/ai_assistant_cubit.dart';
 import '../../../../logic/settings/settings_cubit.dart';
@@ -36,22 +37,23 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Configuration (AI ဆက်တင်များ)'),
-      ),
+      appBar: AppBar(title: const Text('AI Configuration (AI ဆက်တင်များ)')),
       body: BlocConsumer<SettingsCubit, SettingsState>(
         listener: (context, state) {
           if (state.message != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message!)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.message!)));
           }
         },
         builder: (context, state) {
-          final hasKey = state.geminiApiKey != null && state.geminiApiKey!.isNotEmpty;
+          final hasKey =
+              state.geminiApiKey != null && state.geminiApiKey!.isNotEmpty;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.sizeOf(context).width * 0.05,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -61,11 +63,17 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.primaryGreen.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.smart_toy, color: AppColors.primaryGreen, size: 32),
+                      const Icon(
+                        Icons.smart_toy,
+                        color: AppColors.primaryGreen,
+                        size: 32,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -73,12 +81,20 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                           children: [
                             const Text(
                               'Google Gemini AI Integration',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'စာရင်းရေးသွင်းမှုနှင့် အခွန်အခ သဘောတရားများကို ကူညီဖြေကြားပေးမည့် စနစ် ဖြစ်ပါသည်။',
-                              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -101,19 +117,33 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                           children: [
                             const Text(
                               'Gemini API Key',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: (hasKey ? AppColors.primaryGreen : Colors.orange).withOpacity(0.12),
+                                color:
+                                    (hasKey
+                                            ? AppColors.primaryGreen
+                                            : Colors.orange)
+                                        .withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                hasKey ? 'Configured (လုံခြုံစွာသိမ်းထားပြီး)' : 'Not Set (မထည့်ရသေး)',
+                                hasKey
+                                    ? 'Configured (လုံခြုံစွာသိမ်းထားပြီး)'
+                                    : 'Not Set (မထည့်ရသေး)',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: hasKey ? AppColors.primaryGreen : Colors.orange,
+                                  color: hasKey
+                                      ? AppColors.primaryGreen
+                                      : Colors.orange,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -123,7 +153,10 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         const SizedBox(height: 8),
                         Text(
                           'API Key အား စက်တွင်း Encrypted Storage (Windows Credential / Android Encrypted Storage) တွင် သိမ်းဆည်းပါသည်။',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -132,8 +165,14 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                           decoration: InputDecoration(
                             hintText: 'AIzaSy...',
                             suffixIcon: IconButton(
-                              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 18),
-                              onPressed: () => setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                size: 18,
+                              ),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
                             ),
                           ),
                         ),
@@ -144,23 +183,38 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                             if (hasKey)
                               TextButton.icon(
                                 onPressed: () async {
-                                  await context.read<SettingsCubit>().removeGeminiApiKey();
+                                  await context
+                                      .read<SettingsCubit>()
+                                      .removeGeminiApiKey();
                                   if (context.mounted) {
-                                    await context.read<AiAssistantCubit>().removeApiKey();
+                                    await context
+                                        .read<AiAssistantCubit>()
+                                        .removeApiKey();
                                     _apiKeyController.clear();
                                   }
                                 },
-                                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                                label: const Text('ဖျက်မည် (Remove)', style: TextStyle(color: Colors.red)),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: Colors.red,
+                                ),
+                                label: const Text(
+                                  'ဖျက်မည် (Remove)',
+                                  style: TextStyle(color: Colors.red),
+                                ),
                               ),
                             const SizedBox(width: 8),
                             ElevatedButton.icon(
                               onPressed: () async {
                                 final key = _apiKeyController.text.trim();
                                 if (key.isNotEmpty) {
-                                  await context.read<SettingsCubit>().saveGeminiApiKey(key);
+                                  await context
+                                      .read<SettingsCubit>()
+                                      .saveGeminiApiKey(key);
                                   if (context.mounted) {
-                                    await context.read<AiAssistantCubit>().saveApiKeyAndResume(key);
+                                    await context
+                                        .read<AiAssistantCubit>()
+                                        .saveApiKeyAndResume(key);
                                   }
                                 }
                               },
@@ -185,26 +239,45 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                       children: [
                         const Text(
                           'AI Model Selection',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Default: gemini-2.5-flash (Fast, accurate, cost-effective for accounting)',
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           initialValue: _selectedModel,
                           decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                           ),
                           items: const [
-                            DropdownMenuItem(value: 'gemini-2.5-flash', child: Text('Gemini 2.5 Flash (Recommended)')),
-                            DropdownMenuItem(value: 'gemini-1.5-flash', child: Text('Gemini 1.5 Flash')),
-                            DropdownMenuItem(value: 'gemini-1.5-pro', child: Text('Gemini 1.5 Pro (Deep Reasoning)')),
+                            DropdownMenuItem(
+                              value: 'gemini-2.5-flash',
+                              child: Text('Gemini 2.5 Flash (Recommended)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'gemini-1.5-flash',
+                              child: Text('Gemini 1.5 Flash'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'gemini-1.5-pro',
+                              child: Text('Gemini 1.5 Pro (Deep Reasoning)'),
+                            ),
                           ],
                           onChanged: (val) {
-                            if (val != null) setState(() => _selectedModel = val);
+                            if (val != null)
+                              setState(() => _selectedModel = val);
                           },
                         ),
                       ],

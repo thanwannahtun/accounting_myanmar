@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../logic/reports/financial_reports_cubit.dart';
 import '../../../logic/reports/financial_reports_state.dart';
@@ -40,7 +41,10 @@ class DashboardScreen extends StatelessWidget {
               IconButton(
                 tooltip: 'AI စာရင်းကိုင် လက်ထောက်',
                 onPressed: onNavigateToAi,
-                icon: const Icon(Icons.smart_toy_outlined, color: AppColors.primaryGreen),
+                icon: const Icon(
+                  Icons.smart_toy_outlined,
+                  color: AppColors.primaryGreen,
+                ),
               ),
             ],
           ),
@@ -51,7 +55,10 @@ class DashboardScreen extends StatelessWidget {
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                vertical: 8,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,8 +111,12 @@ class DashboardScreen extends StatelessWidget {
                             title: 'အသားတင် အမြတ်/အရှုံး (Net Profit)',
                             value: CurrencyFormatter.format(netProfit),
                             icon: Icons.monetization_on_outlined,
-                            iconColor: netProfit >= 0 ? AppColors.primaryGreen : AppColors.creditRose,
-                            valueColor: netProfit >= 0 ? AppColors.primaryGreen : AppColors.creditRose,
+                            iconColor: netProfit >= 0
+                                ? AppColors.primaryGreen
+                                : AppColors.creditRose,
+                            valueColor: netProfit >= 0
+                                ? AppColors.primaryGreen
+                                : AppColors.creditRose,
                           ),
                           KpiCard(
                             title: 'စုစုပေါင်း ပိုင်ဆိုင်မှု (Total Assets)',
@@ -124,7 +135,10 @@ class DashboardScreen extends StatelessWidget {
                   // Quick Action Buttons
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -133,7 +147,9 @@ class DashboardScreen extends StatelessWidget {
                               icon: const Icon(Icons.add, size: 18),
                               label: const Text('New Entry', maxLines: 1),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -144,7 +160,9 @@ class DashboardScreen extends StatelessWidget {
                               icon: const Icon(Icons.bar_chart, size: 18),
                               label: const Text('Reports', maxLines: 1),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -174,7 +192,10 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.assetBlue.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(6),
@@ -206,36 +227,63 @@ class DashboardScreen extends StatelessWidget {
                             ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: cashFlowList.length > 8 ? 8 : cashFlowList.length,
-                              separatorBuilder: (context, index) => const Divider(height: 1),
+                              itemCount: cashFlowList.length > 8
+                                  ? 8
+                                  : cashFlowList.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final tx = cashFlowList[index];
                                 final cashLine = tx.lines.firstWhere(
-                                  (l) => l.accountId == 'a1000' || l.accountId.toLowerCase().contains('cash'),
+                                  (l) =>
+                                      l.accountId == 'a1000' ||
+                                      l.accountId.toLowerCase().contains(
+                                        'cash',
+                                      ),
                                 );
                                 final isPositive = cashLine.debit > 0;
-                                final amount = isPositive ? cashLine.debit : cashLine.credit;
+                                final amount = isPositive
+                                    ? cashLine.debit
+                                    : cashLine.credit;
 
                                 return ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                    horizontal: 0,
+                                  ),
                                   leading: CircleAvatar(
-                                    backgroundColor: (isPositive ? AppColors.primaryGreen : AppColors.creditRose)
-                                        .withOpacity(0.12),
+                                    backgroundColor:
+                                        (isPositive
+                                                ? AppColors.primaryGreen
+                                                : AppColors.creditRose)
+                                            .withOpacity(0.12),
                                     child: Icon(
-                                      isPositive ? Icons.arrow_downward : Icons.arrow_upward,
-                                      color: isPositive ? AppColors.primaryGreen : AppColors.creditRose,
+                                      isPositive
+                                          ? Icons.arrow_downward
+                                          : Icons.arrow_upward,
+                                      color: isPositive
+                                          ? AppColors.primaryGreen
+                                          : AppColors.creditRose,
                                       size: 18,
                                     ),
                                   ),
                                   title: Text(
                                     tx.description,
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   subtitle: Text(
                                     tx.date,
-                                    style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
                                   ),
                                   trailing: Text(
                                     '${isPositive ? '+' : '-'}${CurrencyFormatter.format(amount)}',
@@ -243,7 +291,9 @@ class DashboardScreen extends StatelessWidget {
                                       fontFamily: 'Courier',
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: isPositive ? AppColors.primaryGreen : AppColors.creditRose,
+                                      color: isPositive
+                                          ? AppColors.primaryGreen
+                                          : AppColors.creditRose,
                                     ),
                                   ),
                                 );
