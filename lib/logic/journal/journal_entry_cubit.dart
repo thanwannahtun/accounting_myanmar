@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/models/journal_entry_line.dart';
@@ -31,19 +33,25 @@ class JournalEntryCubit extends Cubit<JournalEntryState> {
     required String date,
     required String description,
     required List<JournalEntryLine> lines,
+    String? remark,
+    bool isDraft = false,
   }) async {
+    final status = isDraft ? 'draft' : 'posted';
     final newEntry = JournalEntry(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
       date: date.trim(),
       description: description.trim(),
+      remark: remark?.trim().isNotEmpty == true ? remark!.trim() : null,
+      status: status,
       lines: lines,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    if (!newEntry.isBalanced) {
+    if (!isDraft && !newEntry.isBalanced) {
       emit(state.copyWith(
         status: BlocStatus.failure,
-        errorMessage: 'Cannot save: Debits and Credits must be balanced and greater than zero!',
+        errorMessage:
+            'Cannot post: Debits and Credits must be balanced and greater than zero!',
       ));
       return;
     }
@@ -59,7 +67,108 @@ class JournalEntryCubit extends Cubit<JournalEntryState> {
     }
   }
 
+  Future<void> reverseJournalEntry({
+    required JournalEntry originalEntry,
+    String? reversalDate,
+    String? reason,
+  }) async {
+    if (!originalEntry.canReverse) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage:
+            'Cannot reverse: This entry is already reversed or is a reversal entry.',
+      ));
+      return;
+    }
+
+    try {
+      final now = DateTime.now();
+      final date = reversalDate ?? DateFormat('yyyy-MM-dd').format(now);
+      final newReversalId = 'rev_${now.millisecondsSinceEpoch}';
+
+      // Swap debits and credits for all lines
+      final invertedLines = originalEntry.lines.map((l) {
+        return JournalEntryLine(
+          id: 'l_${now.millisecondsSinceEpoch}_${l.id}',
+          journalEntryId: newReversalId,
+          accountId: l.accountId,
+          debit: l.credit,
+          credit: l.debit,
+        );
+      }).toList();
+
+      final reversalEntry = JournalEntry(
+        id: newReversalId,
+        date: date,
+        description:
+            'Reversal of Entry #${originalEntry.id} - ${originalEntry.description}',
+        remark: reason?.trim().isNotEmpty == true
+            ? reason!.trim()
+            : 'Reversal entry for #${originalEntry.id}',
+        status: 'reversal',
+        linkedTransactionId: originalEntry.id,
+        lines: invertedLines,
+        createdAt: now.millisecondsSinceEpoch,
+      );
+
+      final updatedOriginal = originalEntry.copyWith(
+        status: 'reversed',
+        linkedTransactionId: newReversalId,
+      );
+
+      await _journalRepository.addJournalEntry(reversalEntry);
+      await _journalRepository.updateJournalEntry(updatedOriginal);
+
+      await loadJournalEntries();
+    } catch (e) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Failed to reverse journal entry: $e',
+      ));
+    }
+  }
+
+  Future<void> postDraftEntry(JournalEntry draftEntry) async {
+    if (!draftEntry.isDraft) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Only draft entries can be posted.',
+      ));
+      return;
+    }
+
+    if (!draftEntry.isBalanced) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage:
+            'Cannot post draft: Debits and Credits must be balanced and greater than zero!',
+      ));
+      return;
+    }
+
+    try {
+      final postedEntry = draftEntry.copyWith(status: 'posted');
+      await _journalRepository.updateJournalEntry(postedEntry);
+      await loadJournalEntries();
+    } catch (e) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Failed to post draft entry: $e',
+      ));
+    }
+  }
+
   Future<void> deleteJournalEntry(String id) async {
+    final target = state.entries.where((e) => e.id == id).firstOrNull;
+    if (target != null && !target.isDraft) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage:
+            'Security & Standard Guard: Posted entries cannot be deleted. Use Reverse Entry instead.',
+      ));
+      return;
+    }
+
     try {
       await _journalRepository.deleteJournalEntry(id);
       await loadJournalEntries();

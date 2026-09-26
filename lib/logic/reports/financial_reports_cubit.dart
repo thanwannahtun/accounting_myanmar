@@ -33,6 +33,7 @@ class FinancialReportsCubit extends Cubit<FinancialReportsState> {
       }
 
       for (final t in transactions) {
+        if (t.isDraft) continue;
         for (final line in t.lines) {
           final acc = accounts.where((a) => a.id == line.accountId).firstOrNull;
           if (acc == null) continue;

@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand Green Colors
-  static const Color primaryGreen = Color(0xFF16A34A);      // Emerald 600
-  static const Color primaryGreenDark = Color(0xFF15803D);  // Emerald 700
+  static const Color primaryGreen = Color(0xFF16A34A); // Emerald 600
+  static const Color primaryGreenDark = Color(0xFF15803D); // Emerald 700
   static const Color primaryGreenLight = Color(0xFF22C55E); // Emerald 500
   static const Color greenContainerLight = Color(0xFFDCFCE7); // Emerald 100
-  static const Color greenContainerDark = Color(0xFF14532D);  // Emerald 900
+  static const Color greenContainerDark = Color(0xFF14532D); // Emerald 900
 
   // Semantic Financial Colors
-  static const Color debitGreen = Color(0xFF10B981);  // Money in / Assets / Net profit
-  static const Color creditRose = Color(0xFFEF4444);  // Money out / Expenses / Liabilities
-  static const Color assetBlue = Color(0xFF0284C7);   // Assets
+  static const Color debitGreen = Color(
+    0xFF10B981,
+  ); // Money in / Assets / Net profit
+  static const Color creditRose = Color(
+    0xFFEF4444,
+  ); // Money out / Expenses / Liabilities
+  static const Color assetBlue = Color(0xFF0284C7); // Assets
   static const Color equityPurple = Color(0xFF9333EA); // Owner equity
   static const Color warningOrange = Color(0xFFF59E0B);
+  static const Color primaryGold = Color(0xFFD97706); // Amber 600 / Reversal
 
   // Light Mode Surfaces
   static const Color lightBackground = Color(0xFFF8FAF9);

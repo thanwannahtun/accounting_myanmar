@@ -76,6 +76,7 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
     final ledgerEntries = <LedgerEntry>[];
 
     for (final t in sortedTx) {
+      if (t.isDraft) continue;
       for (final line in t.lines) {
         if (line.accountId == account.id) {
           final debit = line.debit;

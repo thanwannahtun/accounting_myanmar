@@ -16,20 +16,26 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
   SqliteDatabaseService._();
 
   Database? _db;
+  static bool _ffiInitialized = false;
 
   @override
   Future<void> init({String? dbPathOverride}) async {
     if (_db != null && _db!.isOpen) return;
 
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      if (!_ffiInitialized) {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+        _ffiInitialized = true;
+      }
     }
 
     final String dbPath;
     if (dbPathOverride != null) {
       dbPath = dbPathOverride;
-    } else if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    } else if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       final appSupportDir = await getApplicationSupportDirectory();
       final dbFolder = Directory(p.join(appSupportDir.path, 'databases'));
       if (!await dbFolder.exists()) {
@@ -43,9 +49,22 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
 
     _db = await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE journal_entries ADD COLUMN remark TEXT',
+          );
+          await db.execute(
+            "ALTER TABLE journal_entries ADD COLUMN status TEXT NOT NULL DEFAULT 'active'",
+          );
+          await db.execute(
+            'ALTER TABLE journal_entries ADD COLUMN linked_transaction_id TEXT',
+          );
+        }
       },
       onCreate: (db, version) async {
         await db.execute('''
@@ -62,6 +81,9 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
             id TEXT PRIMARY KEY,
             date TEXT NOT NULL,
             description TEXT NOT NULL,
+            remark TEXT,
+            status TEXT NOT NULL DEFAULT 'active',
+            linked_transaction_id TEXT,
             created_at INTEGER
           )
         ''');
@@ -90,7 +112,9 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
 
   Database get db {
     if (_db == null) {
-      throw StateError('SqliteDatabaseService has not been initialized. Call init() first.');
+      throw StateError(
+        'SqliteDatabaseService has not been initialized. Call init() first.',
+      );
     }
     return _db!;
   }
@@ -134,11 +158,7 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
 
   @override
   Future<void> deleteAccount(String id) async {
-    await db.delete(
-      'accounts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('accounts', where: 'id = ?', whereArgs: [id]);
   }
 
   @override
@@ -234,11 +254,7 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
         where: 'journal_entry_id = ?',
         whereArgs: [id],
       );
-      await txn.delete(
-        'journal_entries',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await txn.delete('journal_entries', where: 'id = ?', whereArgs: [id]);
     });
   }
 
@@ -279,11 +295,10 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
         }
       }
 
-      await txn.insert(
-        'app_settings',
-        {'key': 'sample_data_loaded', 'value': 'true'},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert('app_settings', {
+        'key': 'sample_data_loaded',
+        'value': 'true',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
   }
 
@@ -294,7 +309,11 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
       await txn.delete('journal_entry_lines');
       await txn.delete('journal_entries');
       await txn.delete('accounts');
-      await txn.delete('app_settings', where: 'key = ?', whereArgs: ['sample_data_loaded']);
+      await txn.delete(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: ['sample_data_loaded'],
+      );
     });
   }
 
@@ -323,20 +342,15 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
 
   @override
   Future<void> setSetting(String key, String value) async {
-    await db.insert(
-      'app_settings',
-      {'key': key, 'value': value},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('app_settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
   Future<void> removeSetting(String key) async {
-    await db.delete(
-      'app_settings',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
+    await db.delete('app_settings', where: 'key = ?', whereArgs: [key]);
   }
 
   @override

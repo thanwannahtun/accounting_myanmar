@@ -1,11 +1,6 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'core/bloc_utils/app_bloc_observer.dart';
 import 'core/route_util/route_generator.dart';
@@ -37,12 +32,6 @@ void main() async {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  // Initialize SQLite FFI for Desktop platforms (Windows, Linux, macOS)
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
-
   // Initialize SQLite local database engine (Desktop FFI / Mobile SQLite)
   await SqliteDatabaseService.instance.init();
 
@@ -61,10 +50,12 @@ class MyApp extends StatelessWidget {
           create: (_) => AccountLocalRepository(SqliteDatabaseService.instance),
         ),
         RepositoryProvider<JournalEntryRepositoryInterface>(
-          create: (_) => JournalEntryLocalRepository(SqliteDatabaseService.instance),
+          create: (_) =>
+              JournalEntryLocalRepository(SqliteDatabaseService.instance),
         ),
         RepositoryProvider<SettingsRepositoryInterface>(
-          create: (_) => SettingsLocalRepository(SqliteDatabaseService.instance),
+          create: (_) =>
+              SettingsLocalRepository(SqliteDatabaseService.instance),
         ),
         RepositoryProvider<AiAssistantRepositoryInterface>(
           create: (_) => AiAssistantRepositoryImpl(),
@@ -79,22 +70,20 @@ class MyApp extends StatelessWidget {
             create: (context) => SettingsCubit(
               settingsRepository: context.read<SettingsRepositoryInterface>(),
               accountRepository: context.read<AccountRepositoryInterface>(),
-              journalRepository: context.read<JournalEntryRepositoryInterface>(),
+              journalRepository: context
+                  .read<JournalEntryRepositoryInterface>(),
             ),
           ),
           BlocProvider<AccountCubit>(
-            create: (context) => AccountCubit(
-              context.read<AccountRepositoryInterface>(),
-            ),
+            create: (context) =>
+                AccountCubit(context.read<AccountRepositoryInterface>()),
           ),
           BlocProvider<JournalEntryCubit>(
             create: (context) => JournalEntryCubit(
               context.read<JournalEntryRepositoryInterface>(),
             ),
           ),
-          BlocProvider<GeneralLedgerCubit>(
-            create: (_) => GeneralLedgerCubit(),
-          ),
+          BlocProvider<GeneralLedgerCubit>(create: (_) => GeneralLedgerCubit()),
           BlocProvider<FinancialReportsCubit>(
             create: (_) => FinancialReportsCubit(),
           ),

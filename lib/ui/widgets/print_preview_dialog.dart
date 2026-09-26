@@ -16,11 +16,134 @@ class PrintPreviewDialog extends StatelessWidget {
     this.onPrintSuccess,
   });
 
+  void _copyToClipboard(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: document.content));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Print layout copied to clipboard!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _executePrint(BuildContext context) {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.primaryGreen,
+        content: Text(
+          'Sent to $defaultPrinter successfully! (Printing...)',
+          style: const TextStyle(color: Colors.white),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+    onPrintSuccess?.call();
+  }
+
+  Widget _buildPaperContent(BuildContext context, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F1712) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: SelectableText(
+          document.content,
+          style: TextStyle(
+            fontFamily: 'Courier',
+            fontSize: document.paperFormat == '58mm'
+                ? 10.5
+                : (document.paperFormat == '80mm' ? 11.5 : 12.5),
+            height: 1.35,
+            color: isDark ? Colors.green[300] : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isMobile = MediaQuery.sizeOf(context).width < 640;
 
+    if (isMobile) {
+      return Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Print Preview (အစမ်းကြည့်ရှုခြင်း)',
+                  style: TextStyle(fontSize: 16),
+                ),
+                Text(
+                  '$defaultPrinter • ${document.paperFormat}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildPaperContent(context, isDark),
+          ),
+          bottomNavigationBar: SafeArea(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _copyToClipboard(context),
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy Text'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => _executePrint(context),
+                      icon: const Icon(Icons.print, size: 16),
+                      label: const Text('Print Now'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Tablet & Desktop Modal Dialog
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -67,34 +190,7 @@ class PrintPreviewDialog extends StatelessWidget {
 
               // Preview Paper Container
               Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF0F1712)
-                        : const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.darkBorder
-                          : AppColors.lightBorder,
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      document.content,
-                      style: TextStyle(
-                        fontFamily: 'Courier',
-                        fontSize: document.paperFormat == '58mm'
-                            ? 10.5
-                            : (document.paperFormat == '80mm' ? 11.5 : 12.5),
-                        height: 1.35,
-                        color: isDark ? Colors.green[300] : Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildPaperContent(context, isDark),
               ),
 
               const SizedBox(height: 16),
@@ -104,15 +200,7 @@ class PrintPreviewDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: document.content));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Print layout copied to clipboard!'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                    onPressed: () => _copyToClipboard(context),
                     icon: const Icon(Icons.copy, size: 18),
                     label: const Text('စာသားကူးယူရန် (Copy)'),
                   ),
@@ -124,20 +212,11 @@ class PrintPreviewDialog extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: AppColors.primaryGreen,
-                              content: Text(
-                                'Sent to $defaultPrinter successfully! (Printing...)',
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                              duration: const Duration(seconds: 3),
-                            ),
-                          );
-                          onPrintSuccess?.call();
-                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryGreen,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () => _executePrint(context),
                         icon: const Icon(Icons.print, size: 18),
                         label: const Text('ပုံနှိပ်မည် (Print)'),
                       ),

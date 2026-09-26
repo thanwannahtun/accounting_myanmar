@@ -110,5 +110,159 @@ void main() {
       expect(totalCredit, 25000.0);
       expect(isBalanced, isTrue);
     });
+
+    test('Journal entry remark and status defaults and serialization work correctly', () {
+      final entry = JournalEntry(
+        id: 'tx_rem_1',
+        date: '2026-09-26',
+        description: 'Inventory Purchase',
+        remark: 'Invoice #INV-2026-009, vendor discount 5%',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'tx_rem_1', accountId: 'acc_inv', debit: 100000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'tx_rem_1', accountId: 'acc_cash', debit: 0, credit: 100000),
+        ],
+      );
+
+      expect(entry.status, 'active');
+      expect(entry.remark, 'Invoice #INV-2026-009, vendor discount 5%');
+      expect(entry.canReverse, isTrue);
+      expect(entry.isReversed, isFalse);
+      expect(entry.isReversal, isFalse);
+
+      final map = entry.toMap();
+      expect(map['remark'], 'Invoice #INV-2026-009, vendor discount 5%');
+      expect(map['status'], 'active');
+      expect(map['linked_transaction_id'], isNull);
+
+      final restored = JournalEntry.fromMap(map, entry.lines);
+      expect(restored.remark, entry.remark);
+      expect(restored.status, 'active');
+      expect(restored.canReverse, isTrue);
+    });
+
+    test('Standard Reversal Mechanism swaps Dr/Cr and links counterpart entries correctly', () {
+      final original = JournalEntry(
+        id: 'tx_orig',
+        date: '2026-09-26',
+        description: 'Payment to Supplier',
+        remark: 'Wrong account used initially',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'tx_orig', accountId: 'acc_ap', debit: 75000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'tx_orig', accountId: 'acc_bank', debit: 0, credit: 75000),
+        ],
+      );
+
+      // Reversal logic simulation
+      final reversalLines = original.lines.map((l) {
+        return JournalEntryLine(
+          id: 'rev_${l.id}',
+          journalEntryId: 'tx_rev',
+          accountId: l.accountId,
+          debit: l.credit,
+          credit: l.debit,
+        );
+      }).toList();
+
+      final reversalEntry = JournalEntry(
+        id: 'tx_rev',
+        date: '2026-09-26',
+        description: 'Reversal of Entry #tx_orig (Payment to Supplier)',
+        remark: 'System auto-reversal',
+        status: 'reversal',
+        linkedTransactionId: original.id,
+        lines: reversalLines,
+      );
+
+      final updatedOriginal = original.copyWith(
+        status: 'reversed',
+        linkedTransactionId: reversalEntry.id,
+      );
+
+      // Verify original status transition
+      expect(updatedOriginal.status, 'reversed');
+      expect(updatedOriginal.isReversed, isTrue);
+      expect(updatedOriginal.canReverse, isFalse);
+      expect(updatedOriginal.linkedTransactionId, 'tx_rev');
+
+      // Verify counterpart reversal entry
+      expect(reversalEntry.status, 'reversal');
+      expect(reversalEntry.isReversal, isTrue);
+      expect(reversalEntry.canReverse, isFalse);
+      expect(reversalEntry.linkedTransactionId, 'tx_orig');
+
+      // Verify Dr/Cr swapped
+      expect(reversalLines[0].debit, 0);
+      expect(reversalLines[0].credit, 75000);
+      expect(reversalLines[1].debit, 75000);
+      expect(reversalLines[1].credit, 0);
+
+      // Verify ledger net impact is exactly zero
+      final combinedLines = [...original.lines, ...reversalLines];
+      final apDebit = combinedLines.where((l) => l.accountId == 'acc_ap').fold(0.0, (s, l) => s + l.debit);
+      final apCredit = combinedLines.where((l) => l.accountId == 'acc_ap').fold(0.0, (s, l) => s + l.credit);
+      expect(apDebit - apCredit, 0.0);
+
+      final bankDebit = combinedLines.where((l) => l.accountId == 'acc_bank').fold(0.0, (s, l) => s + l.debit);
+      final bankCredit = combinedLines.where((l) => l.accountId == 'acc_bank').fold(0.0, (s, l) => s + l.credit);
+      expect(bankDebit - bankCredit, 0.0);
+    });
+
+    test('Draft vs Posted lifecycle: Drafts do NOT affect General Ledger & Reports', () {
+      final postedTx = JournalEntry(
+        id: 'tx_posted',
+        date: '2026-09-26',
+        description: 'Confirmed Cash Sale',
+        status: 'posted',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'tx_posted', accountId: 'acc_cash', debit: 50000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'tx_posted', accountId: 'acc_sales', debit: 0, credit: 50000),
+        ],
+      );
+
+      final draftTx = JournalEntry(
+        id: 'tx_draft',
+        date: '2026-09-26',
+        description: 'Provisional Quotation / Draft Entry',
+        status: 'draft',
+        lines: [
+          const JournalEntryLine(id: 'l3', journalEntryId: 'tx_draft', accountId: 'acc_cash', debit: 999999, credit: 0),
+          const JournalEntryLine(id: 'l4', journalEntryId: 'tx_draft', accountId: 'acc_sales', debit: 0, credit: 999999),
+        ],
+      );
+
+      // Status check
+      expect(postedTx.isPosted, isTrue);
+      expect(postedTx.isDraft, isFalse);
+      expect(postedTx.canReverse, isTrue);
+      expect(postedTx.canDelete, isFalse);
+
+      expect(draftTx.isDraft, isTrue);
+      expect(draftTx.isPosted, isFalse);
+      expect(draftTx.canReverse, isFalse);
+      expect(draftTx.canDelete, isTrue);
+
+      // Ledger calculation filtering test
+      final allTransactions = [postedTx, draftTx];
+      final activeLedgerTx = allTransactions.where((t) => !t.isDraft).toList();
+
+      expect(activeLedgerTx.length, 1);
+      expect(activeLedgerTx.first.id, 'tx_posted');
+
+      // Cash balance must ONLY include posted entry (50,000), ignoring draft (999,999)
+      double cashBalance = 0.0;
+      for (final t in activeLedgerTx) {
+        for (final l in t.lines.where((line) => line.accountId == 'acc_cash')) {
+          cashBalance += (l.debit - l.credit);
+        }
+      }
+      expect(cashBalance, 50000.0);
+
+      // Transition test: Posting the draft
+      final newlyPostedTx = draftTx.copyWith(status: 'posted');
+      expect(newlyPostedTx.isPosted, isTrue);
+      expect(newlyPostedTx.isDraft, isFalse);
+      expect(newlyPostedTx.canReverse, isTrue);
+      expect(newlyPostedTx.canDelete, isFalse);
+    });
   });
 }

@@ -11,6 +11,8 @@ class AddJournalEntryDialog extends StatefulWidget {
     required String date,
     required String description,
     required List<JournalEntryLine> lines,
+    String? remark,
+    bool isDraft,
   })
   onSave;
 
@@ -43,6 +45,7 @@ class _LineEntryModel {
 
 class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
   final TextEditingController _descController = TextEditingController();
+  final TextEditingController _remarkController = TextEditingController();
   late String _selectedDate;
   late List<_LineEntryModel> _lines;
 
@@ -56,6 +59,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
   @override
   void dispose() {
     _descController.dispose();
+    _remarkController.dispose();
     for (final line in _lines) {
       line.debitCtrl.dispose();
       line.creditCtrl.dispose();
@@ -85,9 +89,29 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
     });
   }
 
-  void _submit() {
+  void _submit({bool isDraft = false}) {
     final desc = _descController.text.trim();
-    if (desc.isEmpty || !isBalanced) return;
+    if (desc.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('အကြောင်းအရာ (Description) ထည့်သွင်းပေးပါ'),
+          backgroundColor: AppColors.creditRose,
+        ),
+      );
+      return;
+    }
+
+    if (!isDraft && !isBalanced) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'စာရင်းအတည်ပြုရန် Debit နှင့် Credit တူညီရပါမည် (Debits & Credits must balance)',
+          ),
+          backgroundColor: AppColors.creditRose,
+        ),
+      );
+      return;
+    }
 
     final entryLines = _lines
         .where((l) => l.accountId.isNotEmpty && (l.debit > 0 || l.credit > 0))
@@ -102,7 +126,15 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
         )
         .toList();
 
-    widget.onSave(date: _selectedDate, description: desc, lines: entryLines);
+    widget.onSave(
+      date: _selectedDate,
+      description: desc,
+      remark: _remarkController.text.trim().isNotEmpty
+          ? _remarkController.text.trim()
+          : null,
+      lines: entryLines,
+      isDraft: isDraft,
+    );
     Navigator.of(context).pop();
   }
 
@@ -139,20 +171,28 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
+              TextButton(
+                onPressed: _descController.text.trim().isNotEmpty
+                    ? () => _submit(isDraft: true)
+                    : null,
+                child: const Text('Draft'),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 12.0),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                      horizontal: 14,
                       vertical: 8,
                     ),
                   ),
                   onPressed:
                       (isBalanced && _descController.text.trim().isNotEmpty)
-                      ? _submit
+                      ? () => _submit(isDraft: false)
                       : null,
-                  child: const Text('Save'),
+                  child: const Text('Post'),
                 ),
               ),
             ],
@@ -228,6 +268,25 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           hintText: 'e.g. ဝယ်ယူသူထံမှ အကြွေးငွေ လက်ခံရရှိခြင်း',
                         ),
                         onChanged: (_) => setState(() {}),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Remark Field (Optional)
+                      Text(
+                        'မှတ်စု / မှတ်ချက် (Remark / Notes - Optional)',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _remarkController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          hintText:
+                              'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -461,80 +520,114 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                 ),
                 child: SafeArea(
                   top: false,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Dr: ${numberFormat.format(totalDebit)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Courier',
-                              color: AppColors.primaryGreen,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Dr: ${numberFormat.format(totalDebit)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Courier',
+                                  color: AppColors.primaryGreen,
+                                ),
+                              ),
+                              Text(
+                                'Cr: ${numberFormat.format(totalCredit)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Courier',
+                                  color: AppColors.creditRose,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'Cr: ${numberFormat.format(totalCredit)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Courier',
-                              color: AppColors.creditRose,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  (isBalanced
+                                          ? AppColors.primaryGreen
+                                          : AppColors.creditRose)
+                                      .withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color:
+                                    (isBalanced
+                                            ? AppColors.primaryGreen
+                                            : AppColors.creditRose)
+                                        .withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isBalanced
+                                      ? Icons.check_circle
+                                      : Icons.warning_amber_rounded,
+                                  size: 14,
+                                  color: isBalanced
+                                      ? AppColors.primaryGreen
+                                      : AppColors.creditRose,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  isBalanced
+                                      ? 'Balanced'
+                                      : 'Diff: ${numberFormat.format((totalDebit - totalCredit).abs())}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isBalanced
+                                        ? AppColors.primaryGreen
+                                        : AppColors.creditRose,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              (isBalanced
-                                      ? AppColors.primaryGreen
-                                      : AppColors.creditRose)
-                                  .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color:
-                                (isBalanced
-                                        ? AppColors.primaryGreen
-                                        : AppColors.creditRose)
-                                    .withValues(alpha: 0.3),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _descController.text.trim().isNotEmpty
+                                  ? () => _submit(isDraft: true)
+                                  : null,
+                              icon: const Icon(Icons.edit_note, size: 16),
+                              label: const Text('မူကြမ်းသိမ်းမည်'),
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isBalanced
-                                  ? Icons.check_circle
-                                  : Icons.warning_amber_rounded,
-                              size: 14,
-                              color: isBalanced
-                                  ? AppColors.primaryGreen
-                                  : AppColors.creditRose,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isBalanced
-                                  ? 'Balanced'
-                                  : 'Diff: ${numberFormat.format((totalDebit - totalCredit).abs())}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isBalanced
-                                    ? AppColors.primaryGreen
-                                    : AppColors.creditRose,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryGreen,
+                                foregroundColor: Colors.white,
                               ),
+                              onPressed:
+                                  (isBalanced && _descController.text.trim().isNotEmpty)
+                                  ? () => _submit(isDraft: false)
+                                  : null,
+                              icon: const Icon(Icons.check_circle_outline, size: 16),
+                              label: const Text('အတည်ပြုသွင်းမည်'),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -645,6 +738,34 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           onChanged: (_) => setState(() {}),
                         ),
                       ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Remark Field (Optional)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'မှတ်စု / မှတ်ချက် (Remark / Notes - Optional)',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: _remarkController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      hintText:
+                          'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ],
@@ -906,13 +1027,25 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _descController.text.trim().isNotEmpty
+                        ? () => _submit(isDraft: true)
+                        : null,
+                    icon: const Icon(Icons.edit_note, size: 18),
+                    label: const Text('Save as Draft (မူကြမ်းသိမ်းမည်)'),
+                  ),
+                  const SizedBox(width: 8),
                   ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                    ),
                     onPressed:
                         (isBalanced && _descController.text.trim().isNotEmpty)
-                        ? _submit
+                        ? () => _submit(isDraft: false)
                         : null,
-                    icon: const Icon(Icons.check, size: 18),
-                    label: const Text('Save Entry (စာရင်းသိမ်းမည်)'),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Post Entry (စာရင်းအတည်ပြုသွင်းမည်)'),
                   ),
                 ],
               ),
