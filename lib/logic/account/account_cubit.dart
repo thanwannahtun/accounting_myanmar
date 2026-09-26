@@ -48,6 +48,18 @@ class AccountCubit extends Cubit<AccountState> {
     }
   }
 
+  Future<void> updateAccount(Account account) async {
+    try {
+      await _accountRepository.updateAccount(account);
+      await loadAccounts();
+    } catch (e) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Failed to update account: $e',
+      ));
+    }
+  }
+
   Future<void> deleteAccount(String id) async {
     try {
       await _accountRepository.deleteAccount(id);

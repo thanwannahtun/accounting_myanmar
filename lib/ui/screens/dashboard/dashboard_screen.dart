@@ -11,12 +11,14 @@ class DashboardScreen extends StatelessWidget {
   final VoidCallback? onNavigateToJournal;
   final VoidCallback? onNavigateToReports;
   final VoidCallback? onNavigateToAi;
+  final VoidCallback? onNavigateToSettings;
 
   const DashboardScreen({
     super.key,
     this.onNavigateToJournal,
     this.onNavigateToReports,
     this.onNavigateToAi,
+    this.onNavigateToSettings,
   });
 
   @override
@@ -46,6 +48,17 @@ class DashboardScreen extends StatelessWidget {
                   color: AppColors.primaryGreen,
                 ),
               ),
+              if (onNavigateToSettings != null)
+                IconButton(
+                  tooltip: 'Settings (ဆက်တင်များ)',
+                  onPressed: onNavigateToSettings,
+                  icon: Icon(
+                    Icons.settings_outlined,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
             ],
           ),
           body: RefreshIndicator(
@@ -183,12 +196,16 @@ class DashboardScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'ငွေသားလှုပ်ရှားမှု စာရင်း (Cash Flow Activity)',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : Colors.black87,
+                              Expanded(
+                                child: Text(
+                                  'ငွေသားလှုပ်ရှားမှု စာရင်း (Cash Flow Activity)',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
                                 ),
                               ),
                               Container(

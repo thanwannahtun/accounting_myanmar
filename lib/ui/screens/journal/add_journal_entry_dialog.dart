@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/account.dart';
 import '../../../data/models/journal_entry_line.dart';
@@ -10,7 +11,8 @@ class AddJournalEntryDialog extends StatefulWidget {
     required String date,
     required String description,
     required List<JournalEntryLine> lines,
-  }) onSave;
+  })
+  onSave;
 
   const AddJournalEntryDialog({
     super.key,
@@ -28,14 +30,15 @@ class _LineEntryModel {
   TextEditingController debitCtrl;
   TextEditingController creditCtrl;
 
-  _LineEntryModel({
-    required this.id,
-  })  : accountId = '',
-        debitCtrl = TextEditingController(text: ''),
-        creditCtrl = TextEditingController(text: '');
+  _LineEntryModel({required this.id})
+    : accountId = '',
+      debitCtrl = TextEditingController(text: ''),
+      creditCtrl = TextEditingController(text: '');
 
-  double get debit => double.tryParse(debitCtrl.text.replaceAll(',', '')) ?? 0.0;
-  double get credit => double.tryParse(creditCtrl.text.replaceAll(',', '')) ?? 0.0;
+  double get debit =>
+      double.tryParse(debitCtrl.text.replaceAll(',', '')) ?? 0.0;
+  double get credit =>
+      double.tryParse(creditCtrl.text.replaceAll(',', '')) ?? 0.0;
 }
 
 class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
@@ -47,10 +50,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
   void initState() {
     super.initState();
     _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    _lines = [
-      _LineEntryModel(id: '1'),
-      _LineEntryModel(id: '2'),
-    ];
+    _lines = [_LineEntryModel(id: '1'), _LineEntryModel(id: '2')];
   }
 
   @override
@@ -70,7 +70,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
 
   void _addLine() {
     setState(() {
-      _lines.add(_LineEntryModel(id: DateTime.now().millisecondsSinceEpoch.toString()));
+      _lines.add(
+        _LineEntryModel(id: DateTime.now().millisecondsSinceEpoch.toString()),
+      );
     });
   }
 
@@ -89,28 +91,462 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
 
     final entryLines = _lines
         .where((l) => l.accountId.isNotEmpty && (l.debit > 0 || l.credit > 0))
-        .map((l) => JournalEntryLine(
-              id: 'l_${DateTime.now().millisecondsSinceEpoch}_${l.id}',
-              journalEntryId: '',
-              accountId: l.accountId,
-              debit: l.debit,
-              credit: l.credit,
-            ))
+        .map(
+          (l) => JournalEntryLine(
+            id: 'l_${DateTime.now().millisecondsSinceEpoch}_${l.id}',
+            journalEntryId: '',
+            accountId: l.accountId,
+            debit: l.debit,
+            credit: l.credit,
+          ),
+        )
         .toList();
 
-    widget.onSave(
-      date: _selectedDate,
-      description: desc,
-      lines: entryLines,
-    );
+    widget.onSave(date: _selectedDate, description: desc, lines: entryLines);
     Navigator.of(context).pop();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(_selectedDate) ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final numberFormat = NumberFormat('#,##0.00', 'en_US');
+    final isMobile = MediaQuery.sizeOf(context).width < 650;
 
+    if (isMobile) {
+      // Mobile Full-Screen Layout with system keyboard awareness
+      return Dialog.fullscreen(
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            title: const Text('စာရင်းသွင်းရန် (New Entry)'),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                  onPressed:
+                      (isBalanced && _descController.text.trim().isNotEmpty)
+                      ? _submit
+                      : null,
+                  child: const Text('Save'),
+                ),
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Date Picker Button
+                      Text(
+                        'ရက်စွဲ (Date)',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: _pickDate,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
+                            ),
+                            color: isDark
+                                ? AppColors.darkSurface
+                                : AppColors.lightSurface,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _selectedDate,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Description Field
+                      Text(
+                        'အကြောင်းအရာ (Description / Memo)',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _descController,
+                        decoration: const InputDecoration(
+                          hintText: 'e.g. ဝယ်ယူသူထံမှ အကြွေးငွေ လက်ခံရရှိခြင်း',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Line Items Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'စာရင်းခွဲများ (${_lines.length} Lines)',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _addLine,
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 16,
+                            ),
+                            label: const Text('Add Line'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Mobile Stacked Line Cards
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _lines.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final item = _lines[index];
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkCard
+                                  : AppColors.lightSurface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Line Header with Account Dropdown
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 11,
+                                      backgroundColor: isDark
+                                          ? AppColors.darkBorder
+                                          : AppColors.lightNeutralContainer,
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: DropdownButtonFormField<String>(
+                                        isExpanded: true,
+                                        initialValue: item.accountId.isEmpty
+                                            ? null
+                                            : item.accountId,
+                                        decoration: const InputDecoration(
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        hint: const Text(
+                                          'အကောင့်ရွေးချယ်ပါ...',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        items: widget.accounts.map((acc) {
+                                          return DropdownMenuItem<String>(
+                                            value: acc.id,
+                                            child: Text(
+                                              '${acc.code} - ${acc.name}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            item.accountId = val ?? '';
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    if (_lines.length > 2)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          size: 20,
+                                        ),
+                                        color: AppColors.creditRose,
+                                        onPressed: () => _removeLine(index),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                // Debit and Credit side by side
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Debit (+)',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.primaryGreen,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          TextField(
+                                            controller: item.debitCtrl,
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
+                                            textAlign: TextAlign.right,
+                                            enabled: item.credit <= 0,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontFamily: 'Courier',
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.primaryGreen,
+                                            ),
+                                            decoration: const InputDecoration(
+                                              hintText: '0.00',
+                                              contentPadding:
+                                                  EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                            onChanged: (_) => setState(() {}),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Credit (-)',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.creditRose,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          TextField(
+                                            controller: item.creditCtrl,
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
+                                            textAlign: TextAlign.right,
+                                            enabled: item.debit <= 0,
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontFamily: 'Courier',
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.creditRose,
+                                            ),
+                                            decoration: const InputDecoration(
+                                              hintText: '0.00',
+                                              contentPadding:
+                                                  EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                            onChanged: (_) => setState(() {}),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+              // Persistent Totals Bar at bottom
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                    ),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Dr: ${numberFormat.format(totalDebit)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Courier',
+                              color: AppColors.primaryGreen,
+                            ),
+                          ),
+                          Text(
+                            'Cr: ${numberFormat.format(totalCredit)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Courier',
+                              color: AppColors.creditRose,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              (isBalanced
+                                      ? AppColors.primaryGreen
+                                      : AppColors.creditRose)
+                                  .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color:
+                                (isBalanced
+                                        ? AppColors.primaryGreen
+                                        : AppColors.creditRose)
+                                    .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isBalanced
+                                  ? Icons.check_circle
+                                  : Icons.warning_amber_rounded,
+                              size: 14,
+                              color: isBalanced
+                                  ? AppColors.primaryGreen
+                                  : AppColors.creditRose,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isBalanced
+                                  ? 'Balanced'
+                                  : 'Diff: ${numberFormat.format((totalDebit - totalCredit).abs())}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isBalanced
+                                    ? AppColors.primaryGreen
+                                    : AppColors.creditRose,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Tablet & Desktop Modal Dialog Layout
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -124,9 +560,11 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'စာရင်းသွင်းရန် (New Journal Entry)',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -141,36 +579,39 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 140,
+                    width: 150,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Date (ရက်စွဲ)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Date (ရက်စွဲ)',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         InkWell(
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.tryParse(_selectedDate) ?? DateTime.now(),
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2035),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
-                              });
-                            }
-                          },
+                          onTap: _pickDate,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(_selectedDate, style: const TextStyle(fontSize: 12)),
+                                Text(
+                                  _selectedDate,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
                                 const Icon(Icons.calendar_today, size: 14),
                               ],
                             ),
@@ -184,13 +625,22 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Description / Memo (အကြောင်းအရာ)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Description / Memo (အကြောင်းအရာ)',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         TextField(
                           controller: _descController,
                           decoration: const InputDecoration(
-                            hintText: 'e.g. ဝယ်ယူသူထံမှ အကြွေးငွေ လက်ခံရရှိခြင်း',
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            hintText:
+                                'e.g. ဝယ်ယူသူထံမှ အကြွေးငွေ လက်ခံရရှိခြင်း',
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
                           ),
                           onChanged: (_) => setState(() {}),
                         ),
@@ -204,18 +654,54 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
 
               // Lines List Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightNeutralContainer,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Row(
                   children: [
-                    Expanded(flex: 5, child: Text('Account (စာရင်းခေါင်းစဉ်)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                    Expanded(
+                      flex: 5,
+                      child: Text(
+                        'Account (စာရင်းခေါင်းစဉ်)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     SizedBox(width: 8),
-                    Expanded(flex: 3, child: Text('Debit (+)', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen))),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Debit (+)',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryGreen,
+                        ),
+                      ),
+                    ),
                     SizedBox(width: 8),
-                    Expanded(flex: 3, child: Text('Credit (-)', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.creditRose))),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'Credit (-)',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.creditRose,
+                        ),
+                      ),
+                    ),
                     SizedBox(width: 36),
                   ],
                 ),
@@ -223,11 +709,12 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
 
               const SizedBox(height: 8),
 
-              // Dynamic Lines
+              // Dynamic Lines in Table
               Expanded(
                 child: ListView.separated(
                   itemCount: _lines.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final item = _lines[index];
                     return Row(
@@ -238,11 +725,19 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           flex: 5,
                           child: DropdownButtonFormField<String>(
                             isExpanded: true,
-                            initialValue: item.accountId.isEmpty ? null : item.accountId,
+                            initialValue: item.accountId.isEmpty
+                                ? null
+                                : item.accountId,
                             decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
                             ),
-                            hint: const Text('အကောင့်ရွေးပါ...', style: TextStyle(fontSize: 12)),
+                            hint: const Text(
+                              'အကောင့်ရွေးပါ...',
+                              style: TextStyle(fontSize: 12),
+                            ),
                             items: widget.accounts.map((acc) {
                               return DropdownMenuItem<String>(
                                 value: acc.id,
@@ -267,13 +762,23 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           flex: 3,
                           child: TextField(
                             controller: item.debitCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             textAlign: TextAlign.right,
                             enabled: item.credit <= 0,
-                            style: const TextStyle(fontSize: 12, fontFamily: 'Courier', color: AppColors.primaryGreen),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Courier',
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryGreen,
+                            ),
                             decoration: const InputDecoration(
                               hintText: '0.00',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
                             ),
                             onChanged: (_) => setState(() {}),
                           ),
@@ -285,13 +790,23 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           flex: 3,
                           child: TextField(
                             controller: item.creditCtrl,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             textAlign: TextAlign.right,
                             enabled: item.debit <= 0,
-                            style: const TextStyle(fontSize: 12, fontFamily: 'Courier', color: AppColors.creditRose),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Courier',
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.creditRose,
+                            ),
                             decoration: const InputDecoration(
                               hintText: '0.00',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
                             ),
                             onChanged: (_) => setState(() {}),
                           ),
@@ -304,8 +819,12 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             icon: const Icon(Icons.delete_outline, size: 18),
-                            color: _lines.length > 2 ? AppColors.creditRose : Colors.grey,
-                            onPressed: _lines.length > 2 ? () => _removeLine(index) : null,
+                            color: _lines.length > 2
+                                ? AppColors.creditRose
+                                : Colors.grey,
+                            onPressed: _lines.length > 2
+                                ? () => _removeLine(index)
+                                : null,
                           ),
                         ),
                       ],
@@ -326,30 +845,49 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                     label: const Text('Add Line Item'),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
+                      color: isDark
+                          ? AppColors.darkSurface
+                          : AppColors.lightNeutralContainer,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isBalanced ? AppColors.primaryGreen.withOpacity(0.5) : AppColors.creditRose.withOpacity(0.5),
+                        color: isBalanced
+                            ? AppColors.primaryGreen.withValues(alpha: 0.5)
+                            : AppColors.creditRose.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(
                       children: [
                         Text(
-                          'Debit: ${NumberFormat('#,##0.00').format(totalDebit)}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                          'Debit: ${numberFormat.format(totalDebit)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryGreen,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Credit: ${NumberFormat('#,##0.00').format(totalCredit)}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.creditRose),
+                          'Credit: ${numberFormat.format(totalCredit)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.creditRose,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isBalanced ? Icons.check_circle : Icons.warning_amber_rounded,
+                          isBalanced
+                              ? Icons.check_circle
+                              : Icons.warning_amber_rounded,
                           size: 16,
-                          color: isBalanced ? AppColors.primaryGreen : AppColors.creditRose,
+                          color: isBalanced
+                              ? AppColors.primaryGreen
+                              : AppColors.creditRose,
                         ),
                       ],
                     ),
@@ -369,7 +907,10 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
-                    onPressed: (isBalanced && _descController.text.trim().isNotEmpty) ? _submit : null,
+                    onPressed:
+                        (isBalanced && _descController.text.trim().isNotEmpty)
+                        ? _submit
+                        : null,
                     icon: const Icon(Icons.check, size: 18),
                     label: const Text('Save Entry (စာရင်းသိမ်းမည်)'),
                   ),

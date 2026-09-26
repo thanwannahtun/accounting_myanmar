@@ -13,8 +13,15 @@ import '../../widgets/currency_formatter.dart';
 import '../../widgets/export_dialog.dart';
 import '../../widgets/print_preview_dialog.dart';
 
-class GeneralLedgerScreen extends StatelessWidget {
+class GeneralLedgerScreen extends StatefulWidget {
   const GeneralLedgerScreen({super.key});
+
+  @override
+  State<GeneralLedgerScreen> createState() => _GeneralLedgerScreenState();
+}
+
+class _GeneralLedgerScreenState extends State<GeneralLedgerScreen> {
+  bool _mobileTableView = false;
 
   @override
   Widget build(BuildContext context) {
@@ -155,27 +162,30 @@ class GeneralLedgerScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Account Summary Card
+                // Responsive Account Summary Card (No overflow on mobile or wide screens)
                 if (selectedAccount != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
+                  LayoutBuilder(
+                    builder: (context, cardConstraints) {
+                      final isCompact = cardConstraints.maxWidth < 500;
+
+                      if (isCompact) {
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      selectedAccount.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                    Expanded(
+                                      child: Text(
+                                        selectedAccount.name,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(width: 8),
                                     AccountTypeBadge(
@@ -186,220 +196,455 @@ class GeneralLedgerScreen extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   'GL Code: ${selectedAccount.code}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                  ),
+                                  style: theme.textTheme.bodySmall,
                                 ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                'လက်ကျန်ငွေ (Ending Balance)',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                CurrencyFormatter.format(endingBalance),
-                                style: const TextStyle(
-                                  fontFamily: 'Courier',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.assetBlue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 20),
-
-                // Transaction History Table
-                Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        color: isDark
-                            ? const Color(0xFF14241B)
-                            : const Color(0xFFF1F5F2),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'အရောင်းအဝယ်မှတ်တမ်း (Transaction History)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                            Text(
-                              '${ledgerEntries.length} Records',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (ledgerEntries.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40.0),
-                          child: Center(
-                            child: Text(
-                              'ဤအကောင့်အတွက် မှတ်တမ်းမရှိသေးပါ။ (No transactions for this account)',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        )
-                      else
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            headingRowHeight: 40,
-                            dataRowMinHeight: 44,
-                            dataRowMaxHeight: 56,
-                            horizontalMargin: 16,
-                            columnSpacing: 24,
-                            columns: const [
-                              DataColumn(
-                                label: Text(
-                                  'Date',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Description',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                numeric: true,
-                                label: Text(
-                                  'Debit',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: AppColors.primaryGreen,
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                numeric: true,
-                                label: Text(
-                                  'Credit',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: AppColors.creditRose,
-                                  ),
-                                ),
-                              ),
-                              DataColumn(
-                                numeric: true,
-                                label: Text(
-                                  'Running Balance',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: AppColors.assetBlue,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            rows: ledgerEntries.map((e) {
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      e.date,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 220,
-                                      ),
+                                const Divider(height: 20),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
                                       child: Text(
-                                        e.description,
-                                        style: const TextStyle(fontSize: 12),
-                                        overflow: TextOverflow.ellipsis,
+                                        'လက်ကျန်ငွေ (Ending Balance)',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
                                     Text(
-                                      e.debit > 0
-                                          ? numberFormat.format(e.debit)
-                                          : '-',
+                                      CurrencyFormatter.format(endingBalance),
                                       style: const TextStyle(
                                         fontFamily: 'Courier',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primaryGreen,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      e.credit > 0
-                                          ? numberFormat.format(e.credit)
-                                          : '-',
-                                      style: const TextStyle(
-                                        fontFamily: 'Courier',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.creditRose,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      numberFormat.format(e.balance),
-                                      style: const TextStyle(
-                                        fontFamily: 'Courier',
-                                        fontSize: 12,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.bold,
                                         color: AppColors.assetBlue,
                                       ),
                                     ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      // Wider screen layout
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            selectedAccount.name,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        AccountTypeBadge(
+                                          type: selectedAccount.type,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'GL Code: ${selectedAccount.code}',
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'လက်ကျန်ငွေ (Ending Balance)',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    CurrencyFormatter.format(endingBalance),
+                                    style: const TextStyle(
+                                      fontFamily: 'Courier',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.assetBlue,
+                                    ),
                                   ),
                                 ],
-                              );
-                            }).toList(),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
+                      );
+                    },
                   ),
+
+                const SizedBox(height: 20),
+
+                // Responsive Transaction History Card
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final containerWidth = constraints.maxWidth;
+                    final isMobile = containerWidth < 650;
+                    // Dynamically calculate description width so it fills available space
+                    final dynamicDescWidth = (containerWidth - 440).clamp(
+                      260.0,
+                      750.0,
+                    );
+
+                    return Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            color: isDark
+                                ? const Color(0xFF14241B)
+                                : const Color(0xFFF1F5F2),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'အရောင်းအဝယ်မှတ်တမ်း (Transaction History)',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '${ledgerEntries.length} Records',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ),
+                                    if (isMobile) ...[
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: Icon(
+                                          _mobileTableView
+                                              ? Icons.view_agenda_outlined
+                                              : Icons.table_chart_outlined,
+                                          size: 18,
+                                        ),
+                                        tooltip: _mobileTableView
+                                            ? 'Switch to Card view'
+                                            : 'Switch to Table view',
+                                        onPressed: () {
+                                          setState(() {
+                                            _mobileTableView =
+                                                !_mobileTableView;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          if (ledgerEntries.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40.0),
+                              child: Center(
+                                child: Text(
+                                  'ဤအကောင့်အတွက် မှတ်တမ်းမရှိသေးပါ။ (No transactions for this account)',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            )
+                          else if (isMobile && !_mobileTableView)
+                            // Mobile Friendly Card-Based History List
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.all(12),
+                              itemCount: ledgerEntries.length,
+                              separatorBuilder: (context, index) =>
+                                  const Divider(height: 16),
+                              itemBuilder: (context, index) {
+                                final e = ledgerEntries[index];
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          e.date,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.assetBlue
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Bal: ${numberFormat.format(e.balance)}',
+                                            style: const TextStyle(
+                                              fontFamily: 'Courier',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.assetBlue,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      e.description,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        if (e.debit > 0)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primaryGreen
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              '+Dr: ${numberFormat.format(e.debit)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Courier',
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primaryGreen,
+                                              ),
+                                            ),
+                                          ),
+                                        if (e.debit > 0 && e.credit > 0)
+                                          const SizedBox(width: 8),
+                                        if (e.credit > 0)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.creditRose
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              '-Cr: ${numberFormat.format(e.credit)}',
+                                              style: const TextStyle(
+                                                fontFamily: 'Courier',
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.creditRose,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            )
+                          else
+                            // Full-Width Dynamic Table Layout (Tablet & Desktop, or Mobile Table mode)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: containerWidth,
+                                ),
+                                child: DataTable(
+                                  headingRowHeight: 42,
+                                  dataRowMinHeight: 46,
+                                  dataRowMaxHeight: 58,
+                                  horizontalMargin: 16,
+                                  columnSpacing: 20,
+                                  columns: [
+                                    const DataColumn(
+                                      label: Text(
+                                        'Date',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: SizedBox(
+                                        width: dynamicDescWidth,
+                                        child: const Text(
+                                          'Description',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'Debit (+)',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: AppColors.primaryGreen,
+                                        ),
+                                      ),
+                                    ),
+                                    const DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'Credit (-)',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: AppColors.creditRose,
+                                        ),
+                                      ),
+                                    ),
+                                    const DataColumn(
+                                      numeric: true,
+                                      label: Text(
+                                        'Running Balance',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: AppColors.assetBlue,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  rows: ledgerEntries.map((e) {
+                                    return DataRow(
+                                      cells: [
+                                        DataCell(
+                                          Text(
+                                            e.date,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          SizedBox(
+                                            width: dynamicDescWidth,
+                                            child: Text(
+                                              e.description,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            e.debit > 0
+                                                ? numberFormat.format(e.debit)
+                                                : '-',
+                                            style: const TextStyle(
+                                              fontFamily: 'Courier',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primaryGreen,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            e.credit > 0
+                                                ? numberFormat.format(e.credit)
+                                                : '-',
+                                            style: const TextStyle(
+                                              fontFamily: 'Courier',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.creditRose,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            numberFormat.format(e.balance),
+                                            style: const TextStyle(
+                                              fontFamily: 'Courier',
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.assetBlue,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

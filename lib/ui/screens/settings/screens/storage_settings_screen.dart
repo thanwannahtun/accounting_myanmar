@@ -94,7 +94,9 @@ class StorageSettingsScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Cloud MySQL Compatibility:'),
+                            Expanded(
+                              child: const Text('Cloud MySQL Compatibility:'),
+                            ),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -182,7 +184,10 @@ class StorageSettingsScreen extends StatelessWidget {
                                         );
                                       },
                                 icon: const Icon(Icons.download, size: 18),
-                                label: const Text('Load Sample Data'),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: const Text('Load Sample Data'),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -222,7 +227,10 @@ class StorageSettingsScreen extends StatelessWidget {
                                   Icons.cleaning_services,
                                   size: 18,
                                 ),
-                                label: const Text('Clear Sample'),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: const Text('Clear Sample'),
+                                ),
                               ),
                             ),
                           ],
@@ -328,8 +336,11 @@ class StorageSettingsScreen extends StatelessWidget {
                             }
                           },
                           icon: const Icon(Icons.delete_forever, size: 18),
-                          label: const Text(
-                            'ဒေတာအားလုံး ရှင်းလင်းမည် (Clear All Data)',
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: const Text(
+                              'ဒေတာအားလုံး ရှင်းလင်းမည် (Clear All Data)',
+                            ),
                           ),
                         ),
                       ],

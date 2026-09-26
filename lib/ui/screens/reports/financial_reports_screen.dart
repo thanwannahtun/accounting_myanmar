@@ -151,6 +151,7 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
     dynamic isRep,
     bool isDark,
   ) {
+    final theme = Theme.of(context);
     final netProfit = isRep.netProfit as double;
     final isPositive = netProfit >= 0;
 
@@ -159,178 +160,228 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
         horizontal: MediaQuery.sizeOf(context).width * 0.05,
         vertical: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Revenue
-                  const Text(
-                    '1. Revenue (ဝင်ငွေများ)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...isRep.revenues.map(
-                    (r) => _buildReportRow(
-                      code: r.account.code,
-                      name: r.account.name,
-                      amount: r.amount,
-                    ),
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total Net Revenue (စုစုပေါင်း အသားတင်ဝင်ငွေ)',
-                    isRep.totalRevenue,
-                    color: AppColors.primaryGreen,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // COGS
-                  const Text(
-                    '2. Cost of Goods Sold (COGS - ရောင်းကုန်ကျစရိတ်)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.creditRose,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...isRep.costOfGoodsSold.map(
-                    (c) => _buildReportRow(
-                      code: c.account.code,
-                      name: c.account.name,
-                      amount: c.amount,
-                      isNegative: true,
-                    ),
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total COGS (စုစုပေါင်း ရောင်းကုန်ကျစရိတ်)',
-                    isRep.totalCogs,
-                    isNegative: true,
-                  ),
-
-                  const SizedBox(height: 12),
-                  // Gross Profit highlight
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.assetBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.assetBlue.withOpacity(0.3),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 860),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Revenue Section Header
+                      Row(
+                        children: [
+                          Text(
+                            '1. Revenue',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(ဝင်ငွေများ)',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
-                    ),
-                    child: _buildTotalRow(
-                      'Gross Profit (စုစုပေါင်း အကြမ်းအမြတ်)',
-                      isRep.grossProfit,
-                      color: AppColors.assetBlue,
-                    ),
-                  ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...isRep.revenues.map<Widget>(
+                        (r) => _buildReportRow(
+                          context: context,
+                          code: r.account.code,
+                          name: r.account.name,
+                          amount: r.amount,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label: 'Total Net Revenue (စုစုပေါင်း အသားတင်ဝင်ငွေ)',
+                        amount: isRep.totalRevenue,
+                      ),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                  // Operating Expenses
-                  const Text(
-                    '3. Operating Expenses (လုပ်ငန်းလည်ပတ်စရိတ်များ)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.creditRose,
-                    ),
+                      // COGS Section Header
+                      Row(
+                        children: [
+                          Text(
+                            '2. COGS',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(COGS - ရောင်းကုန်ကျစရိတ်)',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...isRep.costOfGoodsSold.map<Widget>(
+                        (c) => _buildReportRow(
+                          context: context,
+                          code: c.account.code,
+                          name: c.account.name,
+                          amount: c.amount,
+                          isNegative: true,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label: 'Total COGS (စုစုပေါင်း ရောင်းကုန်ကျစရိတ်)',
+                        amount: isRep.totalCogs,
+                        isNegative: true,
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Minimalist Gross Profit Summary Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkSurface
+                              : AppColors.lightNeutralContainer,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
+                        ),
+                        child: _buildTotalRow(
+                          context: context,
+                          label: 'Gross Profit (စုစုပေါင်း အကြမ်းအမြတ်)',
+                          amount: isRep.grossProfit,
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Operating Expenses Section Header
+                      Row(
+                        children: [
+                          Text(
+                            '3. Operating Expenses',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              '(လုပ်ငန်းလည်ပတ်စရိတ်များ)',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...isRep.operatingExpenses.map<Widget>(
+                        (o) => _buildReportRow(
+                          context: context,
+                          code: o.account.code,
+                          name: o.account.name,
+                          amount: o.amount,
+                          isNegative: true,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label:
+                            'Total Operating Expenses (စုစုပေါင်း လည်ပတ်စရိတ်)',
+                        amount: isRep.totalOperatingExpenses,
+                        isNegative: true,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...isRep.operatingExpenses.map(
-                    (o) => _buildReportRow(
-                      code: o.account.code,
-                      name: o.account.name,
-                      amount: o.amount,
-                      isNegative: true,
-                    ),
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total Operating Expenses (စုစုပေါင်း လည်ပတ်စရိတ်)',
-                    isRep.totalOperatingExpenses,
-                    isNegative: true,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-          // Net Profit / Loss Banner
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color:
-                  (isPositive ? AppColors.primaryGreen : AppColors.creditRose)
-                      .withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color:
-                    (isPositive ? AppColors.primaryGreen : AppColors.creditRose)
-                        .withOpacity(0.5),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Minimalist Net Profit / Loss Banner
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color:
+                      (isPositive
+                              ? AppColors.primaryGreen
+                              : AppColors.creditRose)
+                          .withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        (isPositive
+                                ? AppColors.primaryGreen
+                                : AppColors.creditRose)
+                            .withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      isPositive
-                          ? 'Net Profit (အသားတင် အမြတ်)'
-                          : 'Net Loss (အသားတင် အရှုံး)',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isPositive
-                            ? AppColors.primaryGreen
-                            : AppColors.creditRose,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPositive
+                                ? 'Net Profit (အသားတင် အမြတ်)'
+                                : 'Net Loss (အသားတင် အရှုံး)',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isPositive
+                                  ? AppColors.primaryGreen
+                                  : AppColors.creditRose,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Gross Profit - Operating Expenses',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Gross Profit - Operating Expenses',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    Expanded(
+                      child: Text(
+                        CurrencyFormatter.format(netProfit),
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isPositive
+                              ? AppColors.primaryGreen
+                              : AppColors.creditRose,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  CurrencyFormatter.format(netProfit),
-                  style: TextStyle(
-                    fontFamily: 'Courier',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: isPositive
-                        ? AppColors.primaryGreen
-                        : AppColors.creditRose,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -340,6 +391,7 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
     dynamic bsRep,
     bool isDark,
   ) {
+    final theme = Theme.of(context);
     final isBalanced = bsRep.isBalanced as bool;
 
     return SingleChildScrollView(
@@ -347,212 +399,282 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
         horizontal: MediaQuery.sizeOf(context).width * 0.05,
         vertical: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Balance Validation Banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color:
-                  (isBalanced ? AppColors.primaryGreen : AppColors.creditRose)
-                      .withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color:
-                    (isBalanced ? AppColors.primaryGreen : AppColors.creditRose)
-                        .withOpacity(0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isBalanced ? Icons.check_circle : Icons.error,
-                  color: isBalanced
-                      ? AppColors.primaryGreen
-                      : AppColors.creditRose,
-                  size: 22,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 860),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Minimalist Balance Validation Banner
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isBalanced
-                        ? 'Balance Sheet is Balanced (လက်ကျန်ရှင်းတမ်း ညီညွတ်ပါသည် - Assets = Liabilities + Equity)'
-                        : 'Balance Sheet is OUT OF BALANCE (လက်ကျန်ရှင်းတမ်း မညီပါ - စာရင်းစစ်ဆေးပါ)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                decoration: BoxDecoration(
+                  color:
+                      (isBalanced
+                              ? AppColors.primaryGreen
+                              : AppColors.creditRose)
+                          .withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color:
+                        (isBalanced
+                                ? AppColors.primaryGreen
+                                : AppColors.creditRose)
+                            .withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isBalanced ? Icons.check_circle : Icons.error_outline,
                       color: isBalanced
                           ? AppColors.primaryGreen
                           : AppColors.creditRose,
+                      size: 20,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Assets Section
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Assets (ပိုင်ဆိုင်မှုများ)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.assetBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...bsRep.assets.map(
-                    (a) => _buildReportRow(
-                      code: a.account.code,
-                      name: a.account.name,
-                      amount: a.amount,
-                    ),
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total Assets (စုစုပေါင်း ပိုင်ဆိုင်မှု)',
-                    bsRep.totalAssets,
-                    color: AppColors.assetBlue,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Liabilities & Equity Section
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Liabilities
-                  const Text(
-                    'Liabilities (ပေးရန်တာဝန်များ)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.creditRose,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...bsRep.liabilities.map(
-                    (l) => _buildReportRow(
-                      code: l.account.code,
-                      name: l.account.name,
-                      amount: l.amount,
-                    ),
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total Liabilities (စုစုပေါင်း ပေးရန်တာဝန်)',
-                    bsRep.totalLiabilities,
-                    color: AppColors.creditRose,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Equity
-                  const Text(
-                    'Equity (ပိုင်ရှင်အရင်းအနှီး)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.equityPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  ...bsRep.equities.map(
-                    (eq) => _buildReportRow(
-                      code: eq.account.code,
-                      name: eq.account.name,
-                      amount: eq.amount,
-                    ),
-                  ),
-                  _buildReportRow(
-                    code: 'P&L',
-                    name: 'Current Period Net Income (ယခုကာလ အသားတင်အမြတ်)',
-                    amount: bsRep.currentPeriodNetIncome,
-                  ),
-                  const Divider(),
-                  _buildTotalRow(
-                    'Total Equity (စုစုပေါင်း အရင်းအနှီး)',
-                    bsRep.totalEquity + bsRep.currentPeriodNetIncome,
-                    color: AppColors.equityPurple,
-                  ),
-
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.equityPurple.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.equityPurple.withOpacity(0.3),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        isBalanced
+                            ? 'Balance Sheet is Balanced (လက်ကျန်ရှင်းတမ်း ညီညွတ်ပါသည် - Assets = Liabilities + Equity)'
+                            : 'Balance Sheet is OUT OF BALANCE (လက်ကျန်ရှင်းတမ်း မညီပါ - စာရင်းစစ်ဆေးပါ)',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: isBalanced
+                              ? AppColors.primaryGreen
+                              : AppColors.creditRose,
+                        ),
                       ),
                     ),
-                    child: _buildTotalRow(
-                      'Total Liabilities & Equity (တာဝန်နှင့် အရင်းအနှီး စုစုပေါင်း)',
-                      bsRep.totalLiabilitiesAndEquity,
-                      color: AppColors.equityPurple,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              // Assets Section
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Assets',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(ပိုင်ဆိုင်မှုများ)',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...bsRep.assets.map<Widget>(
+                        (a) => _buildReportRow(
+                          context: context,
+                          code: a.account.code,
+                          name: a.account.name,
+                          amount: a.amount,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label: 'Total Assets (စုစုပေါင်း ပိုင်ဆိုင်မှု)',
+                        amount: bsRep.totalAssets,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Liabilities & Equity Section
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Liabilities Header
+                      Row(
+                        children: [
+                          Text(
+                            'Liabilities',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(ပေးရန်တာဝန်များ)',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...bsRep.liabilities.map<Widget>(
+                        (l) => _buildReportRow(
+                          context: context,
+                          code: l.account.code,
+                          name: l.account.name,
+                          amount: l.amount,
+                        ),
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label: 'Total Liabilities (စုစုပေါင်း ပေးရန်တာဝန်)',
+                        amount: bsRep.totalLiabilities,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Equity Header
+                      Row(
+                        children: [
+                          Text(
+                            'Equity',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(ပိုင်ရှင်အရင်းအနှီး)',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+                      const SizedBox(height: 6),
+                      ...bsRep.equities.map<Widget>(
+                        (eq) => _buildReportRow(
+                          context: context,
+                          code: eq.account.code,
+                          name: eq.account.name,
+                          amount: eq.amount,
+                        ),
+                      ),
+                      _buildReportRow(
+                        context: context,
+                        code: 'P&L',
+                        name: 'Current Period Net Income (ယခုကာလ အသားတင်အမြတ်)',
+                        amount: bsRep.currentPeriodNetIncome,
+                      ),
+                      const Divider(height: 16),
+                      _buildTotalRow(
+                        context: context,
+                        label: 'Total Equity (စုစုပေါင်း အရင်းအနှီး)',
+                        amount:
+                            bsRep.totalEquity + bsRep.currentPeriodNetIncome,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Total Liabilities & Equity Summary Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkSurface
+                              : AppColors.lightNeutralContainer,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
+                        ),
+                        child: _buildTotalRow(
+                          context: context,
+                          label: 'Total Liabilities & Equity (တာဝန်နှင့် အရင်းအနှီး စုစုပေါင်း)',
+                          amount: bsRep.totalLiabilitiesAndEquity,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildReportRow({
+    required BuildContext context,
     required String code,
     required String name,
     required double amount,
     bool isNegative = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             child: Row(
               children: [
-                Text(
-                  code,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'Courier',
-                    color: Colors.grey,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF14241B)
+                        : const Color(0xFFF1F5F2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    code,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'Courier',
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryGreen,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     name,
-                    style: const TextStyle(fontSize: 13),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 12),
           Text(
             '${isNegative ? '-' : ''}${CurrencyFormatter.format(amount)}',
             style: TextStyle(
@@ -567,32 +689,32 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
     );
   }
 
-  Widget _buildTotalRow(
-    String label,
-    double amount, {
-    Color? color,
+  Widget _buildTotalRow({
+    required BuildContext context,
+    required String label,
+    required double amount,
     bool isNegative = false,
   }) {
+    final theme = Theme.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: color,
             ),
           ),
         ),
+        const SizedBox(width: 12),
         Text(
           '${isNegative ? '-' : ''}${CurrencyFormatter.format(amount)}',
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: 'Courier',
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: color,
           ),
         ),
       ],

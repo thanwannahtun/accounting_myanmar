@@ -296,7 +296,7 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Accounting Myanmar v1.0.0 (PHASE_1)',
+                            'Accounting Myanmar v1.0.0',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,

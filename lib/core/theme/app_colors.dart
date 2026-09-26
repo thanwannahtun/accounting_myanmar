@@ -30,4 +30,8 @@ class AppColors {
   static const Color darkBorder = Color(0xFF1E382A);
   static const Color darkTextPrimary = Color(0xFFF8FAFC);
   static const Color darkTextSecondary = Color(0xFF94A3B8);
+
+  // Neutral Containers for minimalist reporting & cards
+  static const Color lightNeutralContainer = Color(0xFFF1F5F9);
+  static const Color darkNeutralContainer = Color(0xFF14241B);
 }
