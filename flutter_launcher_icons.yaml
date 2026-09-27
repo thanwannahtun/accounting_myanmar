@@ -1,0 +1,44 @@
+# flutter pub run flutter_launcher_icons
+flutter_launcher_icons:
+  # The base image used as a fallback and for platforms like iOS, Web, and Windows.
+  # Recommendation: 1024x1024px PNG, square corners (let the OS round them), NO transparency for iOS.
+  image_path: "assets/images/app_icon.png"
+
+  # --- Android Setup ---
+  android: true
+  min_sdk_android: 21 
+  
+  # Adaptive Icons (Android 8.0+)
+  adaptive_icon_background: "#FFFFFF" # Use a solid hex or an image: "assets/images/icon_background.png"
+  
+  # CRITICAL FOR GOOD DESIGN: Do NOT use the base app_icon.png here. 
+  # Use a version with a fully transparent background. It will be placed on top of the background above.
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png" 
+  
+  # Themed Icons (Android 13+)
+  # CRITICAL: This MUST be a pure flat black icon on a transparent background. 
+  # Using a colored image here will result in a broken, black square.
+  adaptive_icon_monochrome: "assets/images/app_icon_monochrome.png"
+
+  # ADD THIS LINE: Adds padding around the foreground image. 
+  # Increase or decrease this integer (e.g., 16, 24, 32, 40) until it looks right.
+  adaptive_icon_foreground_inset: 25
+
+  # --- iOS Setup ---
+  ios: true
+  # iOS strictly forbids transparency in app icons. This flag automatically fills transparent pixels with black/white.
+  # Best practice: ensure your base 'app_icon.png' has a solid background.
+  remove_alpha_ios: true 
+
+  # --- Web Setup ---
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    background_color: "#FFFFFF" # Replace with your app's actual background hex
+    theme_color: "#0055FF"      # Replace with your app's primary brand hex
+
+  # --- Windows Setup ---
+  windows:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    icon_size: 256 # Increased to 256 for crisper resolution on high-DPI desktop displays, min : 48 (default)
