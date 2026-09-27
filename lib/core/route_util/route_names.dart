@@ -1,5 +1,5 @@
 class RouteNames {
-  static const String splashScreen = "/splash";
+  static const String splashScreen = "/";
   static const String app = "/base_app";
   static const String signUp = "/sign_up"; // email sign up
   static const String signIn = "/sign_in";

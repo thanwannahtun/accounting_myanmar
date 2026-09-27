@@ -284,8 +284,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                         controller: _remarkController,
                         maxLines: 3,
                         decoration: const InputDecoration(
-                          hintText:
-                              'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
+                          hintText: 'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
                         ),
                       ),
 
@@ -609,7 +608,10 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                                   ? () => _submit(isDraft: true)
                                   : null,
                               icon: const Icon(Icons.edit_note, size: 16),
-                              label: const Text('မူကြမ်းသိမ်းမည်'),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: const Text('မူကြမ်းသိမ်းမည်'),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -620,11 +622,18 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                                 foregroundColor: Colors.white,
                               ),
                               onPressed:
-                                  (isBalanced && _descController.text.trim().isNotEmpty)
+                                  (isBalanced &&
+                                      _descController.text.trim().isNotEmpty)
                                   ? () => _submit(isDraft: false)
                                   : null,
-                              icon: const Icon(Icons.check_circle_outline, size: 16),
-                              label: const Text('အတည်ပြုသွင်းမည်'),
+                              icon: const Icon(
+                                Icons.check_circle_outline,
+                                size: 16,
+                              ),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: const Text('အတည်ပြုသွင်းမည်'),
+                              ),
                             ),
                           ),
                         ],
@@ -760,8 +769,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                     controller: _remarkController,
                     maxLines: 2,
                     decoration: const InputDecoration(
-                      hintText:
-                          'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
+                      hintText: 'အပိုဆောင်း အချက်အလက်များ၊ ပြေစာအမှတ် သို့မဟုတ် မှတ်စုများ ထည့်သွင်းနိုင်သည်...',
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,

@@ -101,6 +101,11 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             onGenerateRoute: RouteGenerator.onGenerateRoute,
+            onGenerateInitialRoutes: (initialRoute) => [
+              RouteGenerator.onGenerateRoute(
+                RouteSettings(name: initialRoute),
+              )!,
+            ],
             initialRoute: RouteNames.splashScreen,
             debugShowCheckedModeBanner: false,
           ),

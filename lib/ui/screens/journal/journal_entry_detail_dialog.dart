@@ -83,101 +83,105 @@ class JournalEntryDetailDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'စုစုပေါင်း (Totals):',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          'Dr: ${numberFormat.format(totalDebit)}',
+                          style: const TextStyle(
+                            fontFamily: 'Courier',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryGreen,
+                          ),
                         ),
                       ),
-                      Row(
-                        children: [
-                          Text(
-                            'Dr: ${numberFormat.format(totalDebit)}',
-                            style: const TextStyle(
-                              fontFamily: 'Courier',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryGreen,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Cr: ${numberFormat.format(totalCredit)}',
-                            style: const TextStyle(
-                              fontFamily: 'Courier',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.creditRose,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 10),
+                      Text(
+                        'Cr: ${numberFormat.format(totalCredit)}',
+                        style: const TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.creditRose,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 8,
+                    runSpacing: 0,
                     alignment: WrapAlignment.end,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       if (entry.canReverse && onReverse != null)
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryGold,
-                            side: const BorderSide(
-                              color: AppColors.primaryGold,
+                        ListTile(
+                          title: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primaryGold,
+                              side: const BorderSide(
+                                color: AppColors.primaryGold,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                            icon: const Icon(Icons.swap_horiz, size: 16),
+                            label: const Text(
+                              'Reverse Entry (ပြောင်းပြန်လှန်မည်)',
                             ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              onReverse!();
+                            },
                           ),
-                          icon: const Icon(Icons.swap_horiz, size: 16),
-                          label: const Text('Reverse Entry (ပြောင်းပြန်လှန်မည်)'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            onReverse!();
-                          },
                         ),
                       if (entry.isDraft && onPost != null)
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                        ListTile(
+                          title: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
+                            icon: const Icon(
+                              Icons.check_circle_outline,
+                              size: 16,
+                            ),
+                            label: const Text('Post Entry (စာရင်းအတည်ပြုရန်)'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              onPost!();
+                            },
                           ),
-                          icon: const Icon(Icons.check_circle_outline, size: 16),
-                          label: const Text('Post Entry (စာရင်းအတည်ပြုရန်)'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            onPost!();
-                          },
                         ),
                       if (entry.isDraft && onDeleteDraft != null)
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.creditRose,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
+                        ListTile(
+                          title: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.creditRose,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
                             ),
+                            icon: const Icon(Icons.delete_outline, size: 16),
+                            label: const Text('Delete Draft (မူကြမ်းဖျက်မည်)'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              onDeleteDraft!();
+                            },
                           ),
-                          icon: const Icon(Icons.delete_outline, size: 16),
-                          label: const Text('Delete Draft (မူကြမ်းဖျက်မည်)'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            onDeleteDraft!();
-                          },
                         ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Close (ပိတ်မည်)'),
+                      ListTile(
+                        title: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close (ပိတ်မည်)'),
+                        ),
                       ),
                     ],
                   ),
@@ -219,8 +223,7 @@ class JournalEntryDetailDialog extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildDescriptionBox(theme, isDark),
-                      if (entry.remark != null &&
-                          entry.remark!.isNotEmpty) ...[
+                      if (entry.remark != null && entry.remark!.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         _buildRemarkBox(theme, isDark),
                       ],
@@ -278,7 +281,10 @@ class JournalEntryDetailDialog extends StatelessWidget {
                               vertical: 8,
                             ),
                           ),
-                          icon: const Icon(Icons.check_circle_outline, size: 16),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            size: 16,
+                          ),
                           label: const Text('Post Entry (စာရင်းအတည်ပြုရန်)'),
                           onPressed: () {
                             Navigator.of(context).pop();
@@ -343,10 +349,9 @@ class JournalEntryDetailDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: (isBalanced
-                        ? AppColors.primaryGreen
-                        : AppColors.creditRose)
-                    .withValues(alpha: 0.12),
+                color:
+                    (isBalanced ? AppColors.primaryGreen : AppColors.creditRose)
+                        .withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -567,10 +572,7 @@ class JournalEntryDetailDialog extends StatelessWidget {
               const Icon(Icons.notes, size: 16, color: Colors.grey),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  entry.remark!,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                child: Text(entry.remark!, style: theme.textTheme.bodyMedium),
               ),
             ],
           ),
@@ -654,30 +656,35 @@ class JournalEntryDetailDialog extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (line.debit > 0)
-                      Text(
-                        'Dr: ${CurrencyFormatter.format(line.debit)}',
-                        style: const TextStyle(
-                          fontFamily: 'Courier',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ),
-                    if (line.credit > 0)
-                      Text(
-                        'Cr: ${CurrencyFormatter.format(line.credit)}',
-                        style: const TextStyle(
-                          fontFamily: 'Courier',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.creditRose,
-                        ),
-                      ),
-                  ],
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (line.debit > 0)
+                          Text(
+                            CurrencyFormatter.format(line.debit),
+                            style: const TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryGreen,
+                            ),
+                          ),
+                        if (line.credit > 0)
+                          Text(
+                            CurrencyFormatter.format(line.credit),
+                            style: const TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.creditRose,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

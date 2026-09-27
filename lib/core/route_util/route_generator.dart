@@ -8,6 +8,7 @@ class RouteGenerator {
     debugPrint("🟢 navigate To -> ${settings.name}");
     switch (settings.name) {
       case RouteNames.splashScreen:
+      case "/splash":
         return _navigateRoute(
           settings: settings,
           builder: (context) => const SplashScreen(),

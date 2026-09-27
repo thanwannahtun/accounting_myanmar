@@ -55,7 +55,8 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(RouteNames.app);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(RouteNames.app, (route) => false);
     }
   }
 
@@ -92,7 +93,8 @@ class _SplashScreenState extends State<SplashScreen> {
                     .read<SettingsCubit>()
                     .markFirstTimePromptCompleted();
                 if (!mounted) return;
-                Navigator.of(context).pushReplacementNamed(RouteNames.app);
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil(RouteNames.app, (route) => false);
               },
               child: const Text('အသစ်စတင်မည် (Start Fresh)'),
             ),
@@ -182,15 +184,16 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(35),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.12),
+                color: AppColors.primaryGreen.withAlpha(30),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.account_balance,
-                size: 56,
-                color: AppColors.primaryGreen,
+              child: Image.asset(
+                "assets/images/app_icon_foreground.png",
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 24),
