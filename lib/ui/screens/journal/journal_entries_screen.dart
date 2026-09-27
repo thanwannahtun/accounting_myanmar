@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/journal_entry.dart';
 import '../../../data/models/journal_entry_line.dart';
 import '../../../logic/account/account_cubit.dart';
+import '../../../logic/cash_flow/cash_flow_cubit.dart';
 import '../../../logic/journal/journal_entry_cubit.dart';
 import '../../../logic/journal/journal_entry_state.dart';
 import '../../../logic/ledger/general_ledger_cubit.dart';
@@ -21,7 +22,86 @@ class JournalEntriesScreen extends StatefulWidget {
 }
 
 class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
-  String _selectedFilter = 'all'; // 'all', 'posted', 'draft'
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearchExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<JournalEntryCubit>().loadMoreEntries();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDateRange(
+    BuildContext context,
+    JournalEntryState state,
+  ) async {
+    final firstDate = DateTime(2000);
+    final lastDate = DateTime(2100);
+
+    DateTimeRange? initialRange;
+    if (state.startDate != null && state.endDate != null) {
+      try {
+        final start = DateFormat('yyyy-MM-dd').parse(state.startDate!);
+        final end = DateFormat('yyyy-MM-dd').parse(state.endDate!);
+        initialRange = DateTimeRange(start: start, end: end);
+      } catch (_) {}
+    }
+
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      initialDateRange: initialRange,
+      helpText: 'ရက်စွဲအပိုင်းအခြား ရွေးချယ်ပါ (Select Date Range)',
+      saveText: 'ရွေးမည် (Apply)',
+      cancelText: 'မလုပ်ပါ (Cancel)',
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: AppColors.primaryGreen,
+                    onPrimary: Colors.white,
+                    surface: AppColors.darkCard,
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: AppColors.primaryGreen,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black87,
+                  ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final startStr = DateFormat('yyyy-MM-dd').format(picked.start);
+      final endStr = DateFormat('yyyy-MM-dd').format(picked.end);
+      if (context.mounted) {
+        context.read<JournalEntryCubit>().setDateRange(startStr, endStr);
+      }
+    }
+  }
 
   void _openAddEntryDialog(BuildContext context) {
     final accounts = context.read<AccountCubit>().state.accounts;
@@ -32,6 +112,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         accounts: accounts,
         onSave:
             ({
+              String? id,
               required String date,
               required String description,
               String? remark,
@@ -42,6 +123,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
               final accountCubit = context.read<AccountCubit>();
               final ledgerCubit = context.read<GeneralLedgerCubit>();
               final reportsCubit = context.read<FinancialReportsCubit>();
+              final cashFlowCubit = context.read<CashFlowCubit>();
 
               await journalCubit.addJournalEntry(
                 date: date,
@@ -62,6 +144,87 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                 accounts: updatedAccounts,
                 transactions: updatedEntries,
               );
+              cashFlowCubit.updateData(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+            },
+      ),
+    );
+  }
+
+  void _openEditEntryDialog(BuildContext context, JournalEntry tx) {
+    if (!tx.isDraft) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'အတည်ပြုပြီးသော စာရင်းများကို တိုက်ရိုက်ပြင်ခွင့် မရှိပါ။ (Only drafts can be edited)',
+          ),
+          backgroundColor: AppColors.creditRose,
+        ),
+      );
+      return;
+    }
+
+    final accounts = context.read<AccountCubit>().state.accounts;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AddJournalEntryDialog(
+        accounts: accounts,
+        initialEntry: tx,
+        onSave:
+            ({
+              String? id,
+              required String date,
+              required String description,
+              String? remark,
+              required List<JournalEntryLine> lines,
+              bool isDraft = true,
+            }) async {
+              final journalCubit = context.read<JournalEntryCubit>();
+              final accountCubit = context.read<AccountCubit>();
+              final ledgerCubit = context.read<GeneralLedgerCubit>();
+              final reportsCubit = context.read<FinancialReportsCubit>();
+              final cashFlowCubit = context.read<CashFlowCubit>();
+
+              await journalCubit.updateJournalEntry(
+                id: id ?? tx.id,
+                date: date,
+                description: description,
+                remark: remark,
+                lines: lines,
+                isDraft: isDraft,
+              );
+
+              final updatedAccounts = accountCubit.state.accounts;
+              final updatedEntries = journalCubit.state.entries;
+
+              ledgerCubit.refresh(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+              reportsCubit.recompute(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+              cashFlowCubit.updateData(
+                accounts: updatedAccounts,
+                transactions: updatedEntries,
+              );
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isDraft
+                          ? 'မူကြမ်း အချက်အလက် ပြင်ဆင်ပြီးပါပြီ။'
+                          : 'မူကြမ်းအား အတည်ပြု စာရင်းသွင်းပြီးပါပြီ။',
+                    ),
+                    backgroundColor: AppColors.primaryGreen,
+                  ),
+                );
+              }
             },
       ),
     );
@@ -81,6 +244,9 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         onDeleteDraft: tx.isDraft
             ? () => _confirmDeleteDraft(context, tx)
             : null,
+        onEditDraft: tx.isDraft
+            ? () => _openEditEntryDialog(context, tx)
+            : null,
       ),
     );
   }
@@ -90,6 +256,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     final accountCubit = context.read<AccountCubit>();
     final ledgerCubit = context.read<GeneralLedgerCubit>();
     final reportsCubit = context.read<FinancialReportsCubit>();
+    final cashFlowCubit = context.read<CashFlowCubit>();
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -155,6 +322,10 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         accounts: updatedAccounts,
         transactions: updatedEntries,
       );
+      cashFlowCubit.updateData(
+        accounts: updatedAccounts,
+        transactions: updatedEntries,
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -177,6 +348,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     final accountCubit = context.read<AccountCubit>();
     final ledgerCubit = context.read<GeneralLedgerCubit>();
     final reportsCubit = context.read<FinancialReportsCubit>();
+    final cashFlowCubit = context.read<CashFlowCubit>();
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -242,6 +414,10 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         accounts: updatedAccounts,
         transactions: updatedEntries,
       );
+      cashFlowCubit.updateData(
+        accounts: updatedAccounts,
+        transactions: updatedEntries,
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -264,6 +440,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     final accountCubit = context.read<AccountCubit>();
     final ledgerCubit = context.read<GeneralLedgerCubit>();
     final reportsCubit = context.read<FinancialReportsCubit>();
+    final cashFlowCubit = context.read<CashFlowCubit>();
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -302,6 +479,10 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         accounts: updatedAccounts,
         transactions: updatedEntries,
       );
+      cashFlowCubit.updateData(
+        accounts: updatedAccounts,
+        transactions: updatedEntries,
+      );
     }
   }
 
@@ -313,8 +494,25 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Journal Entries (နေ့စဉ်စာရင်းသွင်းမှု)'),
         actions: [
+          IconButton(
+            tooltip: _isSearchExpanded ? 'Close Search' : 'Search Entries',
+            icon: Icon(
+              _isSearchExpanded ? Icons.close : Icons.search,
+              color: _isSearchExpanded ? AppColors.creditRose : null,
+            ),
+            onPressed: () {
+              setState(() {
+                _isSearchExpanded = !_isSearchExpanded;
+                if (!_isSearchExpanded) {
+                  _searchController.clear();
+                  context.read<JournalEntryCubit>().setSearchQuery('');
+                }
+              });
+            },
+          ),
           IconButton(
             tooltip: 'New Journal Entry',
             onPressed: () => _openAddEntryDialog(context),
@@ -335,26 +533,56 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         builder: (context, state) {
           final allEntries = state.entries;
           final accounts = context.watch<AccountCubit>().state.accounts;
-
-          final postedCount = allEntries
-              .where((e) => e.isPosted || e.isReversed || e.isReversal)
-              .length;
-          final draftCount = allEntries.where((e) => e.isDraft).length;
-
-          final displayedEntries = allEntries.where((e) {
-            if (_selectedFilter == 'posted') {
-              return e.isPosted || e.isReversed || e.isReversal;
-            }
-            if (_selectedFilter == 'draft') {
-              return e.isDraft;
-            }
-            return true;
-          }).toList();
+          final displayedEntries = state.visibleEntries;
+          final hasDateFilter =
+              state.startDate != null || state.endDate != null;
 
           return Column(
             children: [
-              // Segmented Lifecycle Filter Bar
+              // Search Input Row (expandable)
+              if (_isSearchExpanded)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                    vertical: 8,
+                  ),
+                  color: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'အကြောင်းအရာ၊ မှတ်ချက်၊ အမှတ် ရှာဖွေပါ...',
+                      hintStyle: const TextStyle(fontSize: 13),
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                context
+                                    .read<JournalEntryCubit>()
+                                    .setSearchQuery('');
+                              },
+                            )
+                          : null,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onChanged: (val) {
+                      context.read<JournalEntryCubit>().setSearchQuery(val);
+                    },
+                  ),
+                ),
+
+              // Filter Bar (Lifecycle + Date Range + Sort Order)
               Container(
+                width: double.infinity,
                 padding: EdgeInsets.symmetric(
                   horizontal: MediaQuery.sizeOf(context).width * 0.05,
                   vertical: 8,
@@ -376,61 +604,151 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                   child: Row(
                     children: [
                       FilterChip(
-                        selected: _selectedFilter == 'all',
+                        selected: state.lifecycleFilter == 'all',
                         label: Text('အားလုံး (${allEntries.length})'),
-                        onSelected: (_) =>
-                            setState(() => _selectedFilter = 'all'),
+                        onSelected: (_) => context
+                            .read<JournalEntryCubit>()
+                            .setLifecycleFilter('all'),
                         selectedColor: AppColors.primaryGreen.withValues(
                           alpha: 0.18,
                         ),
                         checkmarkColor: AppColors.primaryGreen,
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight: _selectedFilter == 'all'
+                          fontWeight: state.lifecycleFilter == 'all'
                               ? FontWeight.bold
                               : FontWeight.normal,
-                          color: _selectedFilter == 'all'
+                          color: state.lifecycleFilter == 'all'
                               ? AppColors.primaryGreen
                               : null,
                         ),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        selected: _selectedFilter == 'posted',
-                        label: Text('အတည်ပြုပြီး ($postedCount)'),
-                        onSelected: (_) =>
-                            setState(() => _selectedFilter = 'posted'),
+                        selected: state.lifecycleFilter == 'posted',
+                        label: Text('အတည်ပြုပြီး (${state.postedCount})'),
+                        onSelected: (_) => context
+                            .read<JournalEntryCubit>()
+                            .setLifecycleFilter('posted'),
                         selectedColor: AppColors.primaryGreen.withValues(
                           alpha: 0.18,
                         ),
                         checkmarkColor: AppColors.primaryGreen,
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight: _selectedFilter == 'posted'
+                          fontWeight: state.lifecycleFilter == 'posted'
                               ? FontWeight.bold
                               : FontWeight.normal,
-                          color: _selectedFilter == 'posted'
+                          color: state.lifecycleFilter == 'posted'
                               ? AppColors.primaryGreen
                               : null,
                         ),
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
-                        selected: _selectedFilter == 'draft',
-                        label: Text('မူကြမ်းများ ($draftCount)'),
-                        onSelected: (_) =>
-                            setState(() => _selectedFilter = 'draft'),
+                        selected: state.lifecycleFilter == 'draft',
+                        label: Text('မူကြမ်းများ (${state.draftCount})'),
+                        onSelected: (_) => context
+                            .read<JournalEntryCubit>()
+                            .setLifecycleFilter('draft'),
                         selectedColor: Colors.blueGrey.withValues(alpha: 0.2),
                         checkmarkColor: Colors.blueGrey,
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight: _selectedFilter == 'draft'
+                          fontWeight: state.lifecycleFilter == 'draft'
                               ? FontWeight.bold
                               : FontWeight.normal,
-                          color: _selectedFilter == 'draft'
+                          color: state.lifecycleFilter == 'draft'
                               ? Colors.blueGrey
                               : null,
                         ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        height: 22,
+                        width: 1,
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Date Range Chip
+                      ActionChip(
+                        avatar: Icon(
+                          Icons.date_range,
+                          size: 15,
+                          color: hasDateFilter
+                              ? AppColors.primaryGreen
+                              : Colors.grey,
+                        ),
+                        label: Text(
+                          hasDateFilter
+                              ? '${state.startDate} ~ ${state.endDate}'
+                              : 'ရက်စွဲ (Date Range)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: hasDateFilter
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: hasDateFilter
+                                ? AppColors.primaryGreen
+                                : null,
+                          ),
+                        ),
+                        backgroundColor: hasDateFilter
+                            ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                            : null,
+                        side: hasDateFilter
+                            ? const BorderSide(color: AppColors.primaryGreen)
+                            : null,
+                        onPressed: () => _pickDateRange(context, state),
+                      ),
+                      if (hasDateFilter) ...[
+                        const SizedBox(width: 4),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Clear Date Filter',
+                          icon: const Icon(
+                            Icons.cancel,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () => context
+                              .read<JournalEntryCubit>()
+                              .clearDateRange(),
+                        ),
+                      ],
+                      const SizedBox(width: 12),
+                      Container(
+                        height: 22,
+                        width: 1,
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Sort Toggle Button
+                      ActionChip(
+                        avatar: Icon(
+                          state.isAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 15,
+                          color: AppColors.primaryGold,
+                        ),
+                        label: Text(
+                          state.isAscending
+                              ? 'အဟောင်းမှ အသစ်'
+                              : 'အသစ်မှ အဟောင်း',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        onPressed: () => context
+                            .read<JournalEntryCubit>()
+                            .setSortOrder(!state.isAscending),
                       ),
                     ],
                   ),
@@ -453,19 +771,21 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              _selectedFilter == 'draft'
+                              state.lifecycleFilter == 'draft'
                                   ? 'မူကြမ်းစာရင်းများ မရှိပါ (No Drafts)'
-                                  : (_selectedFilter == 'posted'
+                                  : (state.lifecycleFilter == 'posted'
                                         ? 'အတည်ပြုပြီး စာရင်းများ မရှိပါ (No Posted Entries)'
                                         : 'စာရင်းသွင်းထားမှု မရှိသေးပါ (No Journal Entries)'),
                               style: const TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '+ New Entry ကိုနှိပ်၍ စာရင်း စတင်ရေးသွင်းပါ',
+                              hasDateFilter || state.searchQuery.isNotEmpty
+                                  ? 'ရှာဖွေမှု / ရက်စွဲ စံနှုန်းများနှင့် ကိုက်ညီသော စာရင်း မရှိပါ'
+                                  : '+ New Entry ကိုနှိပ်၍ စာရင်း စတင်ရေးသွင်းပါ',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isDark
@@ -473,18 +793,51 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                     : Colors.grey[600],
                               ),
                             ),
+                            if (hasDateFilter ||
+                                state.searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                icon: const Icon(
+                                  Icons.filter_alt_off,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Filter များ ရှင်းလင်းမည် (Reset Filters)',
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  context
+                                      .read<JournalEntryCubit>()
+                                      .clearDateRange();
+                                  context
+                                      .read<JournalEntryCubit>()
+                                      .setSearchQuery('');
+                                  context
+                                      .read<JournalEntryCubit>()
+                                      .setLifecycleFilter('all');
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       )
                     : ListView.separated(
+                        controller: _scrollController,
                         padding: EdgeInsets.symmetric(
                           horizontal: MediaQuery.sizeOf(context).width * 0.05,
                           vertical: 12,
                         ),
-                        itemCount: displayedEntries.length,
+                        itemCount: displayedEntries.length + 1,
                         separatorBuilder: (context, index) =>
                             const SizedBox(height: 12),
                         itemBuilder: (context, index) {
+                          if (index == displayedEntries.length) {
+                            return _buildPaginationFooter(
+                              context,
+                              state,
+                              isDark,
+                            );
+                          }
                           final tx = displayedEntries[index];
 
                           return Card(
@@ -685,7 +1038,30 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                               IconButton(
                                                 visualDensity:
                                                     VisualDensity.compact,
-                                                padding: const EdgeInsets.all(4),
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                constraints:
+                                                    const BoxConstraints(),
+                                                icon: const Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                color: AppColors.primaryGold,
+                                                tooltip: 'Edit draft (မူကြမ်းပြင်ဆင်ရန်)',
+                                                onPressed: () =>
+                                                    _openEditEntryDialog(
+                                                      context,
+                                                      tx,
+                                                    ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
                                                 constraints:
                                                     const BoxConstraints(),
                                                 icon: const Icon(
@@ -693,8 +1069,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                                   size: 19,
                                                 ),
                                                 color: AppColors.primaryGreen,
-                                                tooltip:
-                                                    'Post draft (စာရင်းအတည်ပြုရန်)',
+                                                tooltip: 'Post draft (စာရင်းအတည်ပြုရန်)',
                                                 onPressed: () =>
                                                     _confirmPostDraft(
                                                       context,
@@ -705,7 +1080,9 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                               IconButton(
                                                 visualDensity:
                                                     VisualDensity.compact,
-                                                padding: const EdgeInsets.all(4),
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
                                                 constraints:
                                                     const BoxConstraints(),
                                                 icon: const Icon(
@@ -713,8 +1090,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                                   size: 18,
                                                 ),
                                                 color: AppColors.creditRose,
-                                                tooltip:
-                                                    'Delete draft (မူကြမ်းဖျက်မည်)',
+                                                tooltip: 'Delete draft (မူကြမ်းဖျက်မည်)',
                                                 onPressed: () =>
                                                     _confirmDeleteDraft(
                                                       context,
@@ -728,7 +1104,9 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                               IconButton(
                                                 visualDensity:
                                                     VisualDensity.compact,
-                                                padding: const EdgeInsets.all(4),
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
                                                 constraints:
                                                     const BoxConstraints(),
                                                 icon: const Icon(
@@ -736,8 +1114,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                                                   size: 19,
                                                 ),
                                                 color: AppColors.primaryGold,
-                                                tooltip:
-                                                    'Reverse entry (စာရင်းပြောင်းပြန်လှန်ရန်)',
+                                                tooltip: 'Reverse entry (စာရင်းပြောင်းပြန်လှန်ရန်)',
                                                 onPressed: () =>
                                                     _confirmReverseEntry(
                                                       context,
@@ -948,6 +1325,55 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildPaginationFooter(
+    BuildContext context,
+    JournalEntryState state,
+    bool isDark,
+  ) {
+    if (state.hasMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'နောက်ထပ် စာရင်းများ ဖတ်ယူနေပါသည်... (Loading more...)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: Center(
+        child: Text(
+          '✓ စုစုပေါင်း (${state.totalFilteredCount}) ခု အားလုံး ဖော်ပြပြီးပါပြီ',
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? Colors.grey[500] : Colors.grey[400],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
       ),
     );
   }

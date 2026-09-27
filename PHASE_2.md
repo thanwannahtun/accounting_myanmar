@@ -206,9 +206,98 @@ EdgeInsets.symmetric(
 
 ---
 
+### Task 14: App Shell Back-Button Elimination & Root Navigation Stacking Fix
+- **Objective**: Fix the root navigation stack issue where a back button appeared on the AppBar of main root tabs (`Dashboard`, `Journal`, `Accounts`, `Ledger`, `Reports`) after the splash screen completed.
+- **Root Cause**: When `initialRoute` was `"/splash"`, Flutter's `defaultGenerateInitialRoutes` automatically generated `"/"` first (which hit the default case pushing `MainShellScreen`), and then pushed `SplashScreen` on top. When `SplashScreen` completed and popped or navigated, `MainShellScreen` was already at the bottom of the stack, leaving `Navigator.canPop(context) == true`.
+- **Implementation**:
+  - `lib/core/route_util/route_names.dart`: Re-mapped `splashScreen = "/"`.
+  - `lib/core/route_util/route_generator.dart`: Handled both `"/"` and `"/splash"` pointing to `SplashScreen`.
+  - `lib/main.dart`: Implemented `onGenerateInitialRoutes` to only generate the exact initial route without slash-splitting.
+  - `lib/ui/screens/splash/splash_screen.dart`: Used `Navigator.of(context).pushNamedAndRemoveUntil(RouteNames.app, (route) => false)`.
+  - Root screen AppBars: Added `automaticallyImplyLeading: false` to `DashboardScreen`, `JournalEntriesScreen`, `ChartOfAccountsScreen`, `GeneralLedgerScreen`, and `FinancialReportsScreen`.
+- **Files Touched**:
+  - `lib/core/route_util/route_names.dart`
+  - `lib/core/route_util/route_generator.dart`
+  - `lib/main.dart`
+  - `lib/ui/screens/splash/splash_screen.dart`
+  - `lib/ui/screens/dashboard/dashboard_screen.dart`
+  - `lib/ui/screens/journal/journal_entries_screen.dart`
+  - `lib/ui/screens/accounts/chart_of_accounts_screen.dart`
+  - `lib/ui/screens/ledger/general_ledger_screen.dart`
+  - `lib/ui/screens/reports/financial_reports_screen.dart`
+
+---
+
+### Task 15: Fix 5.3px Bottom RenderFlex Overflow on Mobile Virtual Keyboard
+- **Objective**: Prevent the bottom overflow when virtual keyboard appears while filling out the "New Journal Entry" dialog form.
+- **Root Cause**: In `AddJournalEntryDialog`, fixed layout non-scrollable containers inside `Dialog` caused child vertical constraints to squeeze when the software keyboard was displayed (`RenderFlex overflowed by 5.3 pixels on the bottom`).
+- **Implementation**:
+  - Re-architected `AddJournalEntryDialog` with `Expanded(child: SingleChildScrollView(child: Column(...)))`.
+  - Pinned only the top Header and the bottom live totals & action bar (`Save as Draft` and `Post Entry`).
+  - Added bottom padding responsive to `MediaQuery.of(context).viewInsets.bottom` ensuring all input fields remain comfortably visible above the keyboard.
+- **Files Touched**:
+  - `lib/ui/screens/journal/add_journal_entry_dialog.dart`
+
+---
+
+### Task 16: Draft Entry Re-Editing Form & Standard Guard Architecture
+- **Objective**: Allow users to re-open and edit draft journal entries in `AddJournalEntryDialog`, while strictly preventing edits to posted records to maintain audit trail integrity.
+- **Implementation**:
+  - `AddJournalEntryDialog`: Added `initialEntry` parameter to pre-populate entry date, description, remark, and lines into controllers.
+  - `JournalEntryCubit.updateJournalEntry`: Verifies `existing.canEdit` (i.e. `isDraft == true`) before performing updates; rejects edits to posted records with a clear security exception.
+  - `JournalEntriesScreen`: Added "Edit Draft (မူကြမ်းပြင်ဆင်ရန်)" icon button directly onto draft cards and wired `onEditDraft` in `JournalEntryDetailDialog`.
+  - Automatically re-syncs accounts, transactions, `GeneralLedgerCubit`, `FinancialReportsCubit`, and `CashFlowCubit`.
+- **Files Touched**:
+  - `lib/logic/journal/journal_entry_cubit.dart`
+  - `lib/ui/screens/journal/add_journal_entry_dialog.dart`
+  - `lib/ui/screens/journal/journal_entry_detail_dialog.dart`
+  - `lib/ui/screens/journal/journal_entries_screen.dart`
+
+---
+
+### Task 17: Unified Bloc-Powered Lazy Pagination, Date-Range & Sorting
+- **Objective**: Implement clean, powerful, unified scroll-to-fetch lazy pagination (limit 20 per fetch), date-range filtering, and sort orders across `JournalEntriesScreen` and `CashFlowActivityScreen`.
+- **Implementation**:
+  - **State Architecture**: `JournalEntryState` and `CashFlowState` encapsulate `pageLimit` (20), `startDate`, `endDate`, `searchQuery`, `isAscending`, and computed getters (`visibleEntries` / `visibleActivities`, `hasMore`, `totalFilteredCount`).
+  - **Scroll Listener**: `ScrollController` detects when user scrolls within 200px of bottom and calls `cubit.loadMore()`, incrementing `pageLimit` by 20.
+  - **Date Range UX**: Clean ActionChip with `showDateRangePicker` and one-tap clear button (`clearDateRange()`).
+  - **Sort Order**: ActionChip toggle between Descending (Newest first) and Ascending (Oldest first).
+  - **Pagination Footers**: Displays live spinner when fetching more or an elegant end-of-list message (`✓ အားလုံး (${total}) ခု ဖော်ပြပြီးပါပြီ`).
+- **Files Touched**:
+  - `lib/logic/journal/journal_entry_state.dart`
+  - `lib/logic/journal/journal_entry_cubit.dart`
+  - `lib/ui/screens/journal/journal_entries_screen.dart`
+
+---
+
+### Task 18: Dedicated Cash Flow Activity Screen & Dashboard Expansion (Limit 20)
+- **Objective**: Expand Dashboard cash flow activities to show the latest 20 items, provide a "View All (အားလုံးကြည့်ရန်)" action navigating to a dedicated screen with pagination, sort orders, KPI metrics, and full transaction details.
+- **Implementation**:
+  - **New Business Logic**: Created `CashFlowState` and `CashFlowCubit` providing filtering (Inflow, Outflow, All), date range, search, sort order, and pagination.
+  - **New Screen (`CashFlowActivityScreen`)**:
+    - Top KPI summary banner (Total Inflow, Total Outflow, Net Cash Flow).
+    - Flow type filter chips ("အားလုံး", "ငွေဝင် (+)", "ငွေထွက် (-)"), Date Range picker, Sort toggle, and Search bar.
+    - Lazy scroll-to-fetch ListView (20 per page).
+    - Tapping an item opens `JournalEntryDetailDialog`.
+  - **Dashboard Updates**:
+    - Increased cash flow display limit from 8 to 20 items.
+    - Added "View All (အားလုံးကြည့်ရန်)" action button navigating to `RouteNames.cashFlowActivity`.
+    - Made list items clickable to open `JournalEntryDetailDialog`.
+- **Files Touched**:
+  - `lib/logic/cash_flow/cash_flow_state.dart` [NEW]
+  - `lib/logic/cash_flow/cash_flow_cubit.dart` [NEW]
+  - `lib/ui/screens/dashboard/cash_flow_activity_screen.dart` [NEW]
+  - `lib/core/route_util/route_names.dart`
+  - `lib/core/route_util/route_generator.dart`
+  - `lib/main.dart`
+  - `lib/ui/screens/splash/splash_screen.dart`
+  - `lib/ui/screens/dashboard/dashboard_screen.dart`
+
+---
+
 ## 🧪 Verification & Test Suite Results
 
-All automated unit tests pass with zero regression:
+All automated unit tests pass with zero regression across 14 test suites:
 - `Seed Data integrity check`: **PASSED**
 - `Financial Statements & Balance Sheet equation test`: **PASSED**
 - `CSV Export content format test`: **PASSED**
@@ -217,5 +306,8 @@ All automated unit tests pass with zero regression:
 - `Journal entry remark and status serialization`: **PASSED**
 - `Standard Reversal Mechanism swaps Dr/Cr & links counterpart entries`: **PASSED**
 - `Draft vs Posted lifecycle: Drafts do NOT affect General Ledger & Reports`: **PASSED**
+- `JournalEntryCubit allows updating draft entries but guards posted entries`: **PASSED**
+- `JournalEntryState handles lazy pagination, sort order, and date-range filters`: **PASSED**
+- `CashFlowCubit and CashFlowState filter inflow/outflow, sort, and paginate`: **PASSED**
 - `App smoke test`: **PASSED**
 - Static Analysis (`flutter analyze`): **0 errors** across all modified files.

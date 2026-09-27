@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/journal_entry.dart';
+import '../../../logic/account/account_cubit.dart';
 import '../../../logic/reports/financial_reports_cubit.dart';
 import '../../../logic/reports/financial_reports_state.dart';
 import '../../widgets/currency_formatter.dart';
 import '../../widgets/kpi_card.dart';
+import '../journal/journal_entry_detail_dialog.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback? onNavigateToJournal;
@@ -20,6 +24,14 @@ class DashboardScreen extends StatelessWidget {
     this.onNavigateToAi,
     this.onNavigateToSettings,
   });
+
+  void _openDetailDialog(BuildContext context, JournalEntry tx) {
+    final accounts = context.read<AccountCubit>().state.accounts;
+    showDialog(
+      context: context,
+      builder: (ctx) => JournalEntryDetailDialog(entry: tx, accounts: accounts),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +50,7 @@ class DashboardScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text('Dashboard (ပင်မဒက်ရှ်ဘုတ်)'),
             actions: [
               IconButton(
@@ -193,38 +206,70 @@ class DashboardScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 6,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  'ငွေသားလှုပ်ရှားမှု စာရင်း (Cash Flow Activity)',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
+                              Text(
+                                'ငွေသားလှုပ်ရှားမှု စာရင်း (Cash Flow)',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.assetBlue.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'Cash / Bank',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.assetBlue,
-                                    fontWeight: FontWeight.w600,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.assetBlue.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Text(
+                                      'Cash / Bank',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.assetBlue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 6),
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                    ),
+                                    onPressed: () => Navigator.of(context)
+                                        .pushNamed(RouteNames.cashFlowActivity),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: const [
+                                        Text(
+                                          'အားလုံး (View All)',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(width: 2),
+                                        Icon(Icons.chevron_right, size: 16),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -240,12 +285,12 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                               ),
                             )
-                          else
+                          else ...[
                             ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: cashFlowList.length > 8
-                                  ? 8
+                              itemCount: cashFlowList.length > 20
+                                  ? 20
                                   : cashFlowList.length,
                               separatorBuilder: (context, index) =>
                                   const Divider(height: 1),
@@ -264,6 +309,7 @@ class DashboardScreen extends StatelessWidget {
                                     : cashLine.credit;
 
                                 return ListTile(
+                                  onTap: () => _openDetailDialog(context, tx),
                                   contentPadding: const EdgeInsets.symmetric(
                                     vertical: 4,
                                     horizontal: 0,
@@ -273,7 +319,7 @@ class DashboardScreen extends StatelessWidget {
                                         (isPositive
                                                 ? AppColors.primaryGreen
                                                 : AppColors.creditRose)
-                                            .withOpacity(0.12),
+                                            .withValues(alpha: 0.12),
                                     child: Icon(
                                       isPositive
                                           ? Icons.arrow_downward
@@ -302,20 +348,51 @@ class DashboardScreen extends StatelessWidget {
                                           : Colors.grey[600],
                                     ),
                                   ),
-                                  trailing: Text(
-                                    '${isPositive ? '+' : '-'}${CurrencyFormatter.format(amount)}',
-                                    style: TextStyle(
-                                      fontFamily: 'Courier',
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: isPositive
-                                          ? AppColors.primaryGreen
-                                          : AppColors.creditRose,
-                                    ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${isPositive ? '+' : '-'}${CurrencyFormatter.format(amount)}',
+                                        style: TextStyle(
+                                          fontFamily: 'Courier',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: isPositive
+                                              ? AppColors.primaryGreen
+                                              : AppColors.creditRose,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        size: 16,
+                                        color: isDark
+                                            ? Colors.grey[600]
+                                            : Colors.grey[400],
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
                             ),
+                            if (cashFlowList.length > 20) ...[
+                              const SizedBox(height: 12),
+                              Center(
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  onPressed: () => Navigator.of(context)
+                                      .pushNamed(RouteNames.cashFlowActivity),
+                                  icon: const Icon(Icons.list_alt, size: 16),
+                                  label: Text(
+                                    'ကျန်ရှိသော ငွေသားလှုပ်ရှားမှုများ ကြည့်ရန် (${cashFlowList.length} ခု) →',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ],
                       ),
                     ),

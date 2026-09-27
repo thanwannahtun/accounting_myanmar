@@ -5,6 +5,7 @@ import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../logic/account/account_cubit.dart';
 import '../../../logic/ai/ai_assistant_cubit.dart';
+import '../../../logic/cash_flow/cash_flow_cubit.dart';
 import '../../../logic/journal/journal_entry_cubit.dart';
 import '../../../logic/ledger/general_ledger_cubit.dart';
 import '../../../logic/reports/financial_reports_cubit.dart';
@@ -45,6 +46,10 @@ class _SplashScreenState extends State<SplashScreen> {
       transactions: transactions,
     );
     context.read<FinancialReportsCubit>().recompute(
+      accounts: accounts,
+      transactions: transactions,
+    );
+    context.read<CashFlowCubit>().updateData(
       accounts: accounts,
       transactions: transactions,
     );
@@ -168,10 +173,17 @@ class _SplashScreenState extends State<SplashScreen> {
       accounts: accounts,
       transactions: transactions,
     );
+    context.read<CashFlowCubit>().updateData(
+      accounts: accounts,
+      transactions: transactions,
+    );
 
     // Dismiss loading dialog and navigate to app
     Navigator.of(context, rootNavigator: true).pop();
-    Navigator.of(context).pushReplacementNamed(RouteNames.app);
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      RouteNames.app,
+      (route) => false,
+    );
   }
 
   @override

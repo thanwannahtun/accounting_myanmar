@@ -158,6 +158,84 @@ class JournalEntryCubit extends Cubit<JournalEntryState> {
     }
   }
 
+  Future<void> updateJournalEntry({
+    required String id,
+    required String date,
+    required String description,
+    required List<JournalEntryLine> lines,
+    String? remark,
+    bool isDraft = true,
+  }) async {
+    final existing = state.entries.where((e) => e.id == id).firstOrNull;
+    if (existing == null) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Journal entry not found.',
+      ));
+      return;
+    }
+
+    if (!existing.canEdit) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Security & Standard Guard: Only draft entries can be edited.',
+      ));
+      return;
+    }
+
+    final updated = existing.copyWith(
+      date: date.trim(),
+      description: description.trim(),
+      remark: remark?.trim().isNotEmpty == true ? remark!.trim() : null,
+      status: isDraft ? 'draft' : 'posted',
+      lines: lines,
+    );
+
+    if (!isDraft && !updated.isBalanced) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage:
+            'Cannot post: Debits and Credits must be balanced and greater than zero!',
+      ));
+      return;
+    }
+
+    try {
+      await _journalRepository.updateJournalEntry(updated);
+      await loadJournalEntries();
+    } catch (e) {
+      emit(state.copyWith(
+        status: BlocStatus.failure,
+        errorMessage: 'Failed to update journal entry: $e',
+      ));
+    }
+  }
+
+  void setLifecycleFilter(String filter) {
+    emit(state.copyWith(lifecycleFilter: filter, pageLimit: 20));
+  }
+
+  void setSortOrder(bool isAscending) {
+    emit(state.copyWith(isAscending: isAscending, pageLimit: 20));
+  }
+
+  void setDateRange(String? start, String? end) {
+    emit(state.copyWith(startDate: start, endDate: end, pageLimit: 20));
+  }
+
+  void clearDateRange() {
+    emit(state.copyWith(clearDates: true, pageLimit: 20));
+  }
+
+  void setSearchQuery(String query) {
+    emit(state.copyWith(searchQuery: query, pageLimit: 20));
+  }
+
+  void loadMoreEntries() {
+    if (!state.hasMore) return;
+    emit(state.copyWith(pageLimit: state.pageLimit + 20));
+  }
+
   Future<void> deleteJournalEntry(String id) async {
     final target = state.entries.where((e) => e.id == id).firstOrNull;
     if (target != null && !target.isDraft) {

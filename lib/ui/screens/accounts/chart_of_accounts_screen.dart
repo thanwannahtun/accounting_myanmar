@@ -174,6 +174,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Chart of Accounts (စာရင်းဇယား)'),
         actions: [
           IconButton(

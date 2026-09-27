@@ -30,4 +30,5 @@ class RouteNames {
   static const String needCustomApp = "/need_custom_app_for_your_business";
   static const String profileAccount = "/profile_account";
   static const String accounting = "/accounting";
+  static const String cashFlowActivity = "/cash_flow_activity";
 }

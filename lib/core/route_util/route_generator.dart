@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import '../../ui/screens/dashboard/cash_flow_activity_screen.dart';
 import '../../ui/screens/shell/main_shell_screen.dart';
 import '../../ui/screens/splash/splash_screen.dart';
 import 'route_names.dart';
+
+import 'package:flutter/material.dart';
 
 class RouteGenerator {
   static Route<T>? onGenerateRoute<T>(RouteSettings settings) {
@@ -17,6 +19,11 @@ class RouteGenerator {
         return _navigateRoute(
           settings: settings,
           builder: (context) => const MainShellScreen(),
+        );
+      case RouteNames.cashFlowActivity:
+        return _navigateRoute(
+          settings: settings,
+          builder: (context) => const CashFlowActivityScreen(),
         );
       default:
         return _navigateRoute(

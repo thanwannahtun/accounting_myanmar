@@ -13,6 +13,7 @@ class JournalEntryDetailDialog extends StatelessWidget {
   final VoidCallback? onReverse;
   final VoidCallback? onPost;
   final VoidCallback? onDeleteDraft;
+  final VoidCallback? onEditDraft;
 
   const JournalEntryDetailDialog({
     super.key,
@@ -21,6 +22,7 @@ class JournalEntryDetailDialog extends StatelessWidget {
     this.onReverse,
     this.onPost,
     this.onDeleteDraft,
+    this.onEditDraft,
   });
 
   @override
@@ -110,78 +112,89 @@ class JournalEntryDetailDialog extends StatelessWidget {
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 0,
+                    runSpacing: 8,
                     alignment: WrapAlignment.end,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       if (entry.canReverse && onReverse != null)
-                        ListTile(
-                          title: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primaryGold,
-                              side: const BorderSide(
-                                color: AppColors.primaryGold,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryGold,
+                            side: const BorderSide(
+                              color: AppColors.primaryGold,
                             ),
-                            icon: const Icon(Icons.swap_horiz, size: 16),
-                            label: const Text(
-                              'Reverse Entry (ပြောင်းပြန်လှန်မည်)',
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              onReverse!();
-                            },
                           ),
+                          icon: const Icon(Icons.swap_horiz, size: 16),
+                          label: const Text(
+                            'Reverse Entry (ပြောင်းပြန်လှန်မည်)',
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onReverse!();
+                          },
+                        ),
+                      if (entry.isDraft && onEditDraft != null)
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryGold,
+                            side: const BorderSide(
+                              color: AppColors.primaryGold,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: const Text('Edit Draft (မူကြမ်းပြင်မည်)'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onEditDraft!();
+                          },
                         ),
                       if (entry.isDraft && onPost != null)
-                        ListTile(
-                          title: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryGreen,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            icon: const Icon(
-                              Icons.check_circle_outline,
-                              size: 16,
-                            ),
-                            label: const Text('Post Entry (စာရင်းအတည်ပြုရန်)'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              onPost!();
-                            },
                           ),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            size: 16,
+                          ),
+                          label: const Text('Post Entry (စာရင်းအတည်ပြုရန်)'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onPost!();
+                          },
                         ),
                       if (entry.isDraft && onDeleteDraft != null)
-                        ListTile(
-                          title: TextButton.icon(
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.creditRose,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 8,
-                              ),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.creditRose,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
                             ),
-                            icon: const Icon(Icons.delete_outline, size: 16),
-                            label: const Text('Delete Draft (မူကြမ်းဖျက်မည်)'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              onDeleteDraft!();
-                            },
                           ),
+                          icon: const Icon(Icons.delete_outline, size: 16),
+                          label: const Text('Delete Draft (မူကြမ်းဖျက်မည်)'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onDeleteDraft!();
+                          },
                         ),
-                      ListTile(
-                        title: ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Close (ပိတ်မည်)'),
-                        ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Close (ပိတ်မည်)'),
                       ),
                     ],
                   ),
@@ -269,6 +282,27 @@ class JournalEntryDetailDialog extends StatelessWidget {
                           onPressed: () {
                             Navigator.of(context).pop();
                             onReverse!();
+                          },
+                        ),
+                      if (entry.isDraft && onEditDraft != null)
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryGold,
+                            side: const BorderSide(
+                              color: AppColors.primaryGold,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: const Text(
+                            'Edit Draft (မူကြမ်းပြင်မည်)',
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onEditDraft!();
                           },
                         ),
                       if (entry.isDraft && onPost != null)

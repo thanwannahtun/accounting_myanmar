@@ -54,6 +54,7 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text('Financial Reports (ဘဏ္ဍာရေး အစီရင်ခံစာ)'),
             actions: [
               // Export CSV Button

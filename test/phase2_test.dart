@@ -1,10 +1,46 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:accountingmyanmar/core/bloc_utils/bloc_status.dart';
 import 'package:accountingmyanmar/core/constants/account_types.dart';
 import 'package:accountingmyanmar/data/models/account.dart';
 import 'package:accountingmyanmar/data/models/journal_entry.dart';
 import 'package:accountingmyanmar/data/models/journal_entry_line.dart';
 import 'package:accountingmyanmar/data/repositories/account/account_repository_interface.dart';
+import 'package:accountingmyanmar/data/repositories/journal/journal_entry_repository_interface.dart';
 import 'package:accountingmyanmar/logic/account/account_cubit.dart';
+import 'package:accountingmyanmar/logic/cash_flow/cash_flow_cubit.dart';
+import 'package:accountingmyanmar/logic/journal/journal_entry_cubit.dart';
+import 'package:accountingmyanmar/logic/journal/journal_entry_state.dart';
+
+class MockJournalEntryRepository implements JournalEntryRepositoryInterface {
+  final List<JournalEntry> _entries = [];
+
+  MockJournalEntryRepository([List<JournalEntry>? initial]) {
+    if (initial != null) _entries.addAll(initial);
+  }
+
+  @override
+  Future<List<JournalEntry>> getJournalEntries() async => List.of(_entries);
+
+  @override
+  Future<JournalEntry?> getJournalEntryById(String id) async =>
+      _entries.where((e) => e.id == id).firstOrNull;
+
+  @override
+  Future<void> addJournalEntry(JournalEntry entry) async {
+    _entries.add(entry);
+  }
+
+  @override
+  Future<void> updateJournalEntry(JournalEntry entry) async {
+    final idx = _entries.indexWhere((e) => e.id == entry.id);
+    if (idx != -1) _entries[idx] = entry;
+  }
+
+  @override
+  Future<void> deleteJournalEntry(String id) async {
+    _entries.removeWhere((e) => e.id == id);
+  }
+}
 
 class MockAccountRepository implements AccountRepositoryInterface {
   final List<Account> _accounts = [];
@@ -263,6 +299,177 @@ void main() {
       expect(newlyPostedTx.isDraft, isFalse);
       expect(newlyPostedTx.canReverse, isTrue);
       expect(newlyPostedTx.canDelete, isFalse);
+    });
+
+    test('JournalEntryCubit allows updating draft entries but guards posted entries', () async {
+      final draft = JournalEntry(
+        id: 'draft_1',
+        date: '2026-09-25',
+        description: 'Initial draft proposal',
+        status: 'draft',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'draft_1', accountId: 'a1000', debit: 10000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'draft_1', accountId: 'a4000', debit: 0, credit: 10000),
+        ],
+      );
+
+      final posted = JournalEntry(
+        id: 'posted_1',
+        date: '2026-09-26',
+        description: 'Confirmed sales',
+        status: 'posted',
+        lines: [
+          const JournalEntryLine(id: 'l3', journalEntryId: 'posted_1', accountId: 'a1000', debit: 20000, credit: 0),
+          const JournalEntryLine(id: 'l4', journalEntryId: 'posted_1', accountId: 'a4000', debit: 0, credit: 20000),
+        ],
+      );
+
+      final jRepo = MockJournalEntryRepository([draft, posted]);
+      final jCubit = JournalEntryCubit(jRepo);
+      await jCubit.loadJournalEntries();
+
+      // 1. Update draft successfully
+      await jCubit.updateJournalEntry(
+        id: 'draft_1',
+        date: '2026-09-27',
+        description: 'Updated draft proposal',
+        remark: 'Revised line item amounts',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'draft_1', accountId: 'a1000', debit: 15000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'draft_1', accountId: 'a4000', debit: 0, credit: 15000),
+        ],
+        isDraft: true,
+      );
+
+      final updatedDraft = jCubit.state.entries.firstWhere((e) => e.id == 'draft_1');
+      expect(updatedDraft.description, 'Updated draft proposal');
+      expect(updatedDraft.remark, 'Revised line item amounts');
+      expect(updatedDraft.date, '2026-09-27');
+      expect(updatedDraft.lines.first.debit, 15000);
+
+      // 2. Editing posted entry should fail and be rejected
+      await jCubit.updateJournalEntry(
+        id: 'posted_1',
+        date: '2026-09-27',
+        description: 'Tampered sales',
+        lines: [
+          const JournalEntryLine(id: 'l3', journalEntryId: 'posted_1', accountId: 'a1000', debit: 99999, credit: 0),
+          const JournalEntryLine(id: 'l4', journalEntryId: 'posted_1', accountId: 'a4000', debit: 0, credit: 99999),
+        ],
+      );
+
+      expect(jCubit.state.status, BlocStatus.failure);
+      expect(jCubit.state.errorMessage, contains('Security & Standard Guard: Only draft entries can be edited'));
+    });
+
+    test('JournalEntryState handles lazy pagination, sort order, and date-range filters', () {
+      final entries = List.generate(45, (i) {
+        final day = (i + 1).toString().padLeft(2, '0');
+        return JournalEntry(
+          id: 'tx_$i',
+          date: '2026-08-$day',
+          description: 'Transaction $i',
+          status: 'posted',
+          createdAt: 1000 + i,
+          lines: [
+            JournalEntryLine(id: 'l1_$i', journalEntryId: 'tx_$i', accountId: 'a1000', debit: 1000.0 * (i + 1), credit: 0),
+            JournalEntryLine(id: 'l2_$i', journalEntryId: 'tx_$i', accountId: 'a4000', debit: 0, credit: 1000.0 * (i + 1)),
+          ],
+        );
+      });
+
+      var state = JournalEntryState(entries: entries, pageLimit: 20);
+
+      // Default: limit 20, descending (newest first: 2026-08-45)
+      expect(state.totalFilteredCount, 45);
+      expect(state.visibleEntries.length, 20);
+      expect(state.hasMore, isTrue);
+      expect(state.visibleEntries.first.date, '2026-08-45');
+
+      // Sort order toggle: ascending (oldest first: 2026-08-01)
+      state = state.copyWith(isAscending: true);
+      expect(state.visibleEntries.first.date, '2026-08-01');
+
+      // Pagination load more
+      state = state.copyWith(pageLimit: 40);
+      expect(state.visibleEntries.length, 40);
+      expect(state.hasMore, isTrue);
+
+      state = state.copyWith(pageLimit: 60);
+      expect(state.visibleEntries.length, 45);
+      expect(state.hasMore, isFalse);
+
+      // Date range filter
+      state = state.copyWith(
+        startDate: '2026-08-10',
+        endDate: '2026-08-15',
+        pageLimit: 20,
+      );
+      expect(state.totalFilteredCount, 6);
+      expect(state.visibleEntries.length, 6);
+      expect(state.hasMore, isFalse);
+    });
+
+    test('CashFlowCubit and CashFlowState filter inflow/outflow, sort, and paginate', () {
+      final cashAcc = const Account(id: 'a1000', code: '1000', name: 'Cash / Bank (လက်ငင်းငွေ/ဘဏ်)', type: AccountTypes.asset);
+      final salesAcc = const Account(id: 'a4000', code: '4000', name: 'Sales Revenue', type: AccountTypes.revenue);
+      final expAcc = const Account(id: 'a6000', code: '6000', name: 'Rent Expense', type: AccountTypes.expense);
+
+      final inflowTx = JournalEntry(
+        id: 'cf_in',
+        date: '2026-09-10',
+        description: 'Customer Cash Sale',
+        status: 'posted',
+        lines: [
+          const JournalEntryLine(id: 'l1', journalEntryId: 'cf_in', accountId: 'a1000', debit: 500000, credit: 0),
+          const JournalEntryLine(id: 'l2', journalEntryId: 'cf_in', accountId: 'a4000', debit: 0, credit: 500000),
+        ],
+      );
+
+      final outflowTx = JournalEntry(
+        id: 'cf_out',
+        date: '2026-09-15',
+        description: 'Office Rent Payment',
+        status: 'posted',
+        lines: [
+          const JournalEntryLine(id: 'l3', journalEntryId: 'cf_out', accountId: 'a6000', debit: 200000, credit: 0),
+          const JournalEntryLine(id: 'l4', journalEntryId: 'cf_out', accountId: 'a1000', debit: 0, credit: 200000),
+        ],
+      );
+
+      final cubit = CashFlowCubit();
+      cubit.updateData(
+        accounts: [cashAcc, salesAcc, expAcc],
+        transactions: [inflowTx, outflowTx],
+      );
+
+      // Verify all activities & KPI metrics
+      expect(cubit.state.allActivities.length, 2);
+      expect(cubit.state.totalInflow, 500000.0);
+      expect(cubit.state.totalOutflow, 200000.0);
+      expect(cubit.state.netCashFlow, 300000.0);
+
+      // Filter inflow only
+      cubit.setFlowTypeFilter('inflow');
+      expect(cubit.state.visibleActivities.length, 1);
+      expect(cubit.state.visibleActivities.first.isInflow, isTrue);
+      expect(cubit.state.visibleActivities.first.netAmount, 500000.0);
+
+      // Filter outflow only
+      cubit.setFlowTypeFilter('outflow');
+      expect(cubit.state.visibleActivities.length, 1);
+      expect(cubit.state.visibleActivities.first.isInflow, isFalse);
+      expect(cubit.state.visibleActivities.first.outflowAmount, 200000.0);
+
+      // Clear filter and test date range
+      cubit.setFlowTypeFilter('all');
+      cubit.setDateRange('2026-09-12', '2026-09-20');
+      expect(cubit.state.visibleActivities.length, 1);
+      expect(cubit.state.visibleActivities.first.entry.id, 'cf_out');
+
+      // Clear date range
+      cubit.clearDateRange();
+      expect(cubit.state.visibleActivities.length, 2);
     });
   });
 }

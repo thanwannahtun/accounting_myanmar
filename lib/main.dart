@@ -18,6 +18,7 @@ import 'data/repositories/settings/settings_repository_interface.dart';
 import 'data/services/database/sqlite_database_service.dart';
 import 'logic/account/account_cubit.dart';
 import 'logic/ai/ai_assistant_cubit.dart';
+import 'logic/cash_flow/cash_flow_cubit.dart';
 import 'logic/journal/journal_entry_cubit.dart';
 import 'logic/ledger/general_ledger_cubit.dart';
 import 'logic/reports/financial_reports_cubit.dart';
@@ -87,6 +88,7 @@ class MyApp extends StatelessWidget {
           BlocProvider<FinancialReportsCubit>(
             create: (_) => FinancialReportsCubit(),
           ),
+          BlocProvider<CashFlowCubit>(create: (_) => CashFlowCubit()),
           BlocProvider<AiAssistantCubit>(
             create: (context) => AiAssistantCubit(
               context.read<AiAssistantRepositoryInterface>(),

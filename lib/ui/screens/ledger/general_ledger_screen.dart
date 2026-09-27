@@ -52,6 +52,7 @@ class _GeneralLedgerScreenState extends State<GeneralLedgerScreen> {
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text('General Ledger (အထွေထွေ လယ်ဂျာ)'),
             actions: [
               // Export CSV Button

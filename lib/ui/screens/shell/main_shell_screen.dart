@@ -65,83 +65,101 @@ class _MainShellScreenState extends State<MainShellScreen> {
         if (isWideScreen) {
           // Tablet & Desktop Sidebar Layout (All 7 Destinations)
           return Scaffold(
+            resizeToAvoidBottomInset: false,
             body: Row(
               children: [
-                NavigationRail(
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: (idx) => _navigateToIndex(idx, true),
-                  backgroundColor: isDark
-                      ? AppColors.darkSurface
-                      : AppColors.lightSurface,
-                  labelType: NavigationRailLabelType.all,
-                  leading: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withValues(
-                              alpha: 0.12,
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: IntrinsicHeight(
+                          child: NavigationRail(
+                            selectedIndex: _currentIndex,
+                            onDestinationSelected: (idx) =>
+                                _navigateToIndex(idx, true),
+                            backgroundColor: isDark
+                                ? AppColors.darkSurface
+                                : AppColors.lightSurface,
+                            labelType: NavigationRailLabelType.all,
+                            leading: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16.0,
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryGreen.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance,
+                                      color: AppColors.primaryGreen,
+                                      size: 26,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Accounting\nMyanmar',
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        theme.textTheme.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.2,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.account_balance,
-                            color: AppColors.primaryGreen,
-                            size: 26,
+                            destinations: const [
+                              NavigationRailDestination(
+                                icon: Icon(Icons.dashboard_outlined),
+                                selectedIcon: Icon(Icons.dashboard),
+                                label: Text('Dashboard'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.swap_horiz_outlined),
+                                selectedIcon: Icon(Icons.swap_horiz),
+                                label: Text('Entries'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.menu_book_outlined),
+                                selectedIcon: Icon(Icons.menu_book),
+                                label: Text('Accounts'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.format_list_numbered_outlined),
+                                selectedIcon: Icon(Icons.format_list_numbered),
+                                label: Text('Ledger'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.bar_chart_outlined),
+                                selectedIcon: Icon(Icons.bar_chart),
+                                label: Text('Reports'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.smart_toy_outlined),
+                                selectedIcon: Icon(Icons.smart_toy),
+                                label: Text('AI Assistant'),
+                              ),
+                              NavigationRailDestination(
+                                icon: Icon(Icons.settings_outlined),
+                                selectedIcon: Icon(Icons.settings),
+                                label: Text('Settings'),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Accounting\nMyanmar',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.dashboard_outlined),
-                      selectedIcon: Icon(Icons.dashboard),
-                      label: Text('Dashboard'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.swap_horiz_outlined),
-                      selectedIcon: Icon(Icons.swap_horiz),
-                      label: Text('Entries'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.menu_book_outlined),
-                      selectedIcon: Icon(Icons.menu_book),
-                      label: Text('Accounts'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.format_list_numbered_outlined),
-                      selectedIcon: Icon(Icons.format_list_numbered),
-                      label: Text('Ledger'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.bar_chart_outlined),
-                      selectedIcon: Icon(Icons.bar_chart),
-                      label: Text('Reports'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.smart_toy_outlined),
-                      selectedIcon: Icon(Icons.smart_toy),
-                      label: Text('AI Assistant'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.settings_outlined),
-                      selectedIcon: Icon(Icons.settings),
-                      label: Text('Settings'),
-                    ),
-                  ],
+                      ),
+                    );
+                  },
                 ),
                 const VerticalDivider(width: 1, thickness: 1),
                 Expanded(child: screens[_currentIndex]),
