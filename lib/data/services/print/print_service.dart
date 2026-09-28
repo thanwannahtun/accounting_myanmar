@@ -104,6 +104,7 @@ class PrintService {
   FormattedPrintDocument generateIncomeStatementPrintDocument({
     required IncomeStatementReport report,
     required PrintConfig config,
+    String? periodLabel,
   }) {
     final now = DateTime.now();
     final buffer = StringBuffer();
@@ -114,7 +115,10 @@ class PrintService {
     buffer.writeln(divider);
     buffer.writeln(_centerText(config.companyName.toUpperCase(), width));
     buffer.writeln(_centerText('INCOME STATEMENT (PROFIT & LOSS)', width));
-    buffer.writeln(_centerText('As of ${_dateFormat.format(now)}', width));
+    if (periodLabel != null && periodLabel.isNotEmpty) {
+      buffer.writeln(_centerText('Period: $periodLabel', width));
+    }
+    buffer.writeln(_centerText('Printed: ${_dateFormat.format(now)}', width));
     buffer.writeln(divider);
 
     // Revenue
@@ -187,6 +191,7 @@ class PrintService {
   FormattedPrintDocument generateBalanceSheetPrintDocument({
     required BalanceSheetReport report,
     required PrintConfig config,
+    String? asOfLabel,
   }) {
     final now = DateTime.now();
     final buffer = StringBuffer();
@@ -197,7 +202,10 @@ class PrintService {
     buffer.writeln(divider);
     buffer.writeln(_centerText(config.companyName.toUpperCase(), width));
     buffer.writeln(_centerText('BALANCE SHEET STATEMENT', width));
-    buffer.writeln(_centerText('As of ${_dateFormat.format(now)}', width));
+    if (asOfLabel != null && asOfLabel.isNotEmpty) {
+      buffer.writeln(_centerText('As of Date: $asOfLabel', width));
+    }
+    buffer.writeln(_centerText('Printed: ${_dateFormat.format(now)}', width));
     buffer.writeln(divider);
 
     // Assets

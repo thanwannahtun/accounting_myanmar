@@ -100,6 +100,7 @@ class ExportService {
   Future<ExportResult> exportIncomeStatementToCsv({
     required IncomeStatementReport report,
     required PrintConfig printConfig,
+    String? periodLabel,
   }) async {
     final now = DateTime.now();
     final rows = <List<dynamic>>[];
@@ -107,6 +108,9 @@ class ExportService {
     // Header
     rows.add([printConfig.companyName]);
     rows.add(['INCOME STATEMENT (PROFIT & LOSS)']);
+    if (periodLabel != null && periodLabel.isNotEmpty) {
+      rows.add(['Period: $periodLabel']);
+    }
     rows.add(['Date Generated: ${_dateFormat.format(now)}']);
     rows.add(['Currency: ${printConfig.currencySymbol}']);
     rows.add([]);
@@ -155,6 +159,7 @@ class ExportService {
   Future<ExportResult> exportBalanceSheetToCsv({
     required BalanceSheetReport report,
     required PrintConfig printConfig,
+    String? asOfLabel,
   }) async {
     final now = DateTime.now();
     final rows = <List<dynamic>>[];
@@ -162,6 +167,9 @@ class ExportService {
     // Header
     rows.add([printConfig.companyName]);
     rows.add(['BALANCE SHEET STATEMENT']);
+    if (asOfLabel != null && asOfLabel.isNotEmpty) {
+      rows.add(['As of Date: $asOfLabel']);
+    }
     rows.add(['Date Generated: ${_dateFormat.format(now)}']);
     rows.add(['Balanced Check: ${report.isBalanced ? "BALANCED" : "OUT OF BALANCE"}']);
     rows.add(['Currency: ${printConfig.currencySymbol}']);

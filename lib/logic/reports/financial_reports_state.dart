@@ -14,6 +14,10 @@ class FinancialReportsState extends Equatable {
   final ExportResult? lastExport;
   final FormattedPrintDocument? lastPrintDoc;
   final String? errorMessage;
+  final String pnlFilterMode; // 'all', 'this_month', 'this_year', 'custom'
+  final String? pnlStartDate;
+  final String? pnlEndDate;
+  final String? balanceSheetAsOfDate;
 
   const FinancialReportsState({
     this.status = BlocStatus.initial,
@@ -24,6 +28,10 @@ class FinancialReportsState extends Equatable {
     this.lastExport,
     this.lastPrintDoc,
     this.errorMessage,
+    this.pnlFilterMode = 'all',
+    this.pnlStartDate,
+    this.pnlEndDate,
+    this.balanceSheetAsOfDate,
   });
 
   FinancialReportsState copyWith({
@@ -35,6 +43,12 @@ class FinancialReportsState extends Equatable {
     ExportResult? lastExport,
     FormattedPrintDocument? lastPrintDoc,
     String? errorMessage,
+    String? pnlFilterMode,
+    String? pnlStartDate,
+    String? pnlEndDate,
+    bool clearPnlDates = false,
+    String? balanceSheetAsOfDate,
+    bool clearBalanceSheetAsOfDate = false,
   }) {
     return FinancialReportsState(
       status: status ?? this.status,
@@ -45,6 +59,12 @@ class FinancialReportsState extends Equatable {
       lastExport: lastExport ?? this.lastExport,
       lastPrintDoc: lastPrintDoc ?? this.lastPrintDoc,
       errorMessage: errorMessage ?? this.errorMessage,
+      pnlFilterMode: pnlFilterMode ?? this.pnlFilterMode,
+      pnlStartDate: clearPnlDates ? null : (pnlStartDate ?? this.pnlStartDate),
+      pnlEndDate: clearPnlDates ? null : (pnlEndDate ?? this.pnlEndDate),
+      balanceSheetAsOfDate: clearBalanceSheetAsOfDate
+          ? null
+          : (balanceSheetAsOfDate ?? this.balanceSheetAsOfDate),
     );
   }
 
@@ -58,5 +78,9 @@ class FinancialReportsState extends Equatable {
     lastExport,
     lastPrintDoc,
     errorMessage,
+    pnlFilterMode,
+    pnlStartDate,
+    pnlEndDate,
+    balanceSheetAsOfDate,
   ];
 }

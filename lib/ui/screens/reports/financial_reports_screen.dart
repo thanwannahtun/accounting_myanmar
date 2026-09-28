@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../logic/account/account_cubit.dart';
+import '../../../logic/journal/journal_entry_cubit.dart';
 import '../../../logic/reports/financial_reports_cubit.dart';
 import '../../../logic/reports/financial_reports_state.dart';
 import '../../../logic/settings/settings_cubit.dart';
@@ -24,6 +26,20 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final reportsCubit = context.read<FinancialReportsCubit>();
+        if (reportsCubit.cachedAccounts.isEmpty ||
+            reportsCubit.state.incomeStatement == null) {
+          final accounts = context.read<AccountCubit>().state.accounts;
+          final transactions = context.read<JournalEntryCubit>().state.entries;
+          reportsCubit.recompute(
+            accounts: accounts,
+            transactions: transactions,
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -134,12 +150,22 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
               // 1. Income Statement (P&L)
               incomeStatement == null
                   ? const Center(child: CircularProgressIndicator())
-                  : _buildIncomeStatementView(context, incomeStatement, isDark),
+                  : _buildIncomeStatementView(
+                      context,
+                      incomeStatement,
+                      isDark,
+                      state,
+                    ),
 
               // 2. Balance Sheet
               balanceSheet == null
                   ? const Center(child: CircularProgressIndicator())
-                  : _buildBalanceSheetView(context, balanceSheet, isDark),
+                  : _buildBalanceSheetView(
+                      context,
+                      balanceSheet,
+                      isDark,
+                      state,
+                    ),
             ],
           ),
         );
@@ -151,15 +177,28 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
     BuildContext context,
     dynamic isRep,
     bool isDark,
+    FinancialReportsState state,
   ) {
     final theme = Theme.of(context);
     final netProfit = isRep.netProfit as double;
     final isPositive = netProfit >= 0;
 
+    String pnlSubtitle = 'အားလုံး (All Time)';
+    if (state.pnlFilterMode == 'this_month') {
+      pnlSubtitle = 'ယခုလ (${state.pnlStartDate} ~ ${state.pnlEndDate})';
+    } else if (state.pnlFilterMode == 'this_year') {
+      pnlSubtitle = 'ယခုနှစ် (${state.pnlStartDate} ~ ${state.pnlEndDate})';
+    } else if (state.pnlStartDate != null || state.pnlEndDate != null) {
+      pnlSubtitle = '${state.pnlStartDate ?? ""} ~ ${state.pnlEndDate ?? ""}';
+    }
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 650;
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.sizeOf(context).width * 0.05,
-        vertical: 16,
+        horizontal: isMobile ? 12 : screenWidth * 0.05,
+        vertical: isMobile ? 10 : 16,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -167,9 +206,12 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // P&L Filter Bar (Compact 1-line on mobile, full row on tablet/desktop)
+              _buildPnlFilterBar(context, state, isDark, pnlSubtitle),
+
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: EdgeInsets.all(isMobile ? 14.0 : 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -391,14 +433,20 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
     BuildContext context,
     dynamic bsRep,
     bool isDark,
+    FinancialReportsState state,
   ) {
     final theme = Theme.of(context);
     final isBalanced = bsRep.isBalanced as bool;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 650;
+    final asOfSubtitle = state.balanceSheetAsOfDate != null
+        ? 'ဖြတ်တောက်ရက်စွဲ: As of ${state.balanceSheetAsOfDate}'
+        : 'ရက်စွဲအထိ: လက်ရှိအထိ (All Time / Latest)';
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.sizeOf(context).width * 0.05,
-        vertical: 16,
+        horizontal: isMobile ? 12 : screenWidth * 0.05,
+        vertical: isMobile ? 10 : 16,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -406,6 +454,9 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Balance Sheet Filter Bar (Compact 1-line on mobile, full row on tablet/desktop)
+              _buildBalanceSheetFilterBar(context, state, isDark, asOfSubtitle),
+
               // Minimalist Balance Validation Banner
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -455,12 +506,12 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Assets Section
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: EdgeInsets.all(isMobile ? 14.0 : 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -720,5 +771,708 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
         ),
       ],
     );
+  }
+
+  Widget _buildPnlFilterBar(
+    BuildContext context,
+    FinancialReportsState state,
+    bool isDark,
+    String pnlSubtitle,
+  ) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 650;
+    final hasDateFilter =
+        state.pnlFilterMode == 'custom' ||
+        (state.pnlStartDate != null && state.pnlFilterMode != 'all');
+
+    if (isMobile) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => _showPnlFilterBottomSheet(context, state, isDark),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hasDateFilter
+                        ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                        : (isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightSurface),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: hasDateFilter
+                          ? AppColors.primaryGreen.withValues(alpha: 0.4)
+                          : (isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: hasDateFilter
+                            ? AppColors.primaryGreen
+                            : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'ကာလ: $pnlSubtitle',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: hasDateFilter
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: hasDateFilter
+                                ? AppColors.primaryGreen
+                                : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: 18,
+                        color: hasDateFilter
+                            ? AppColors.primaryGreen
+                            : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (hasDateFilter) ...[
+              const SizedBox(width: 6),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Clear Filter',
+                icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                onPressed: () =>
+                    context.read<FinancialReportsCubit>().clearPnlFilter(),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Tablet & Desktop: Horizontal chips row
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            // All FilterChip
+            FilterChip(
+              selected: state.pnlFilterMode == 'all',
+              label: const Text('အားလုံး (All Time)'),
+              onSelected: (_) {
+                context.read<FinancialReportsCubit>().clearPnlFilter();
+              },
+              selectedColor: AppColors.primaryGreen.withValues(alpha: 0.18),
+              checkmarkColor: AppColors.primaryGreen,
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: state.pnlFilterMode == 'all'
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+                color: state.pnlFilterMode == 'all'
+                    ? AppColors.primaryGreen
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // This Month FilterChip
+            FilterChip(
+              selected: state.pnlFilterMode == 'this_month',
+              avatar: const Icon(
+                Icons.calendar_view_month,
+                size: 14,
+                color: AppColors.primaryGreen,
+              ),
+              label: const Text('ယခုလ (This Month)'),
+              onSelected: (_) {
+                context.read<FinancialReportsCubit>().setPnlFilterMode(
+                  'this_month',
+                );
+              },
+              selectedColor: AppColors.primaryGreen.withValues(alpha: 0.18),
+              checkmarkColor: AppColors.primaryGreen,
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: state.pnlFilterMode == 'this_month'
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+                color: state.pnlFilterMode == 'this_month'
+                    ? AppColors.primaryGreen
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // This Year FilterChip
+            FilterChip(
+              selected: state.pnlFilterMode == 'this_year',
+              avatar: const Icon(
+                Icons.calendar_today,
+                size: 14,
+                color: AppColors.primaryGreen,
+              ),
+              label: const Text('ယခုနှစ် (This Year)'),
+              onSelected: (_) {
+                context.read<FinancialReportsCubit>().setPnlFilterMode(
+                  'this_year',
+                );
+              },
+              selectedColor: AppColors.primaryGreen.withValues(alpha: 0.18),
+              checkmarkColor: AppColors.primaryGreen,
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: state.pnlFilterMode == 'this_year'
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+                color: state.pnlFilterMode == 'this_year'
+                    ? AppColors.primaryGreen
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 10),
+
+            Container(
+              height: 20,
+              width: 1,
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+            const SizedBox(width: 10),
+
+            // Custom Date Range ActionChip
+            ActionChip(
+              avatar: Icon(
+                Icons.date_range,
+                size: 15,
+                color: hasDateFilter ? AppColors.primaryGreen : Colors.grey,
+              ),
+              label: Text(
+                hasDateFilter
+                    ? '${state.pnlStartDate} ~ ${state.pnlEndDate}'
+                    : 'စိတ်ကြိုက်ရက်စွဲ (Date Range)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: hasDateFilter
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: hasDateFilter ? AppColors.primaryGreen : null,
+                ),
+              ),
+              backgroundColor: hasDateFilter
+                  ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                  : null,
+              side: hasDateFilter
+                  ? const BorderSide(color: AppColors.primaryGreen)
+                  : null,
+              onPressed: () => _pickPnlDateRange(context, state),
+            ),
+            if (hasDateFilter) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
+                tooltip: 'Clear Filter',
+                icon: const Icon(Icons.cancel, size: 16, color: Colors.grey),
+                onPressed: () =>
+                    context.read<FinancialReportsCubit>().clearPnlFilter(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPnlFilterBottomSheet(
+    BuildContext context,
+    FinancialReportsState state,
+    bool isDark,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'ကာလအပိုင်းအခြား ရွေးချယ်ပါ (Filter Period)',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (state.pnlFilterMode != 'all')
+                        TextButton(
+                          onPressed: () {
+                            context
+                                .read<FinancialReportsCubit>()
+                                .clearPnlFilter();
+                            Navigator.pop(ctx);
+                          },
+                          child: const Text(
+                            'Reset',
+                            style: TextStyle(
+                              color: AppColors.creditRose,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 12),
+                ListTile(
+                  leading: const Icon(
+                    Icons.all_inclusive,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: const Text('အားလုံး (All Time)'),
+                  trailing: state.pnlFilterMode == 'all'
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    context.read<FinancialReportsCubit>().clearPnlFilter();
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.calendar_view_month,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: const Text('ယခုလ (This Month)'),
+                  trailing: state.pnlFilterMode == 'this_month'
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    context.read<FinancialReportsCubit>().setPnlFilterMode(
+                      'this_month',
+                    );
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.calendar_today,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: const Text('ယခုနှစ် (This Year)'),
+                  trailing: state.pnlFilterMode == 'this_year'
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    context.read<FinancialReportsCubit>().setPnlFilterMode(
+                      'this_year',
+                    );
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.date_range,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: Text(
+                    state.pnlFilterMode == 'custom' &&
+                            state.pnlStartDate != null
+                        ? 'စိတ်ကြိုက်: ${state.pnlStartDate} ~ ${state.pnlEndDate}'
+                        : 'စိတ်ကြိုက်ရက်စွဲ (Custom Date Range)...',
+                  ),
+                  trailing: state.pnlFilterMode == 'custom'
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickPnlDateRange(context, state);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickPnlDateRange(
+    BuildContext context,
+    FinancialReportsState state,
+  ) async {
+    DateTime initialStart = DateTime.now();
+    DateTime initialEnd = DateTime.now();
+
+    if (state.pnlStartDate != null) {
+      initialStart = DateTime.tryParse(state.pnlStartDate!) ?? initialStart;
+    }
+    if (state.pnlEndDate != null) {
+      initialEnd = DateTime.tryParse(state.pnlEndDate!) ?? initialEnd;
+    }
+
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      initialDateRange: DateTimeRange(
+        start: initialStart.isAfter(initialEnd) ? initialEnd : initialStart,
+        end: initialEnd,
+      ),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.primaryGreen,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && context.mounted) {
+      final startStr = picked.start.toIso8601String().substring(0, 10);
+      final endStr = picked.end.toIso8601String().substring(0, 10);
+      context.read<FinancialReportsCubit>().setPnlCustomDateRange(
+        startStr,
+        endStr,
+      );
+    }
+  }
+
+  Widget _buildBalanceSheetFilterBar(
+    BuildContext context,
+    FinancialReportsState state,
+    bool isDark,
+    String asOfSubtitle,
+  ) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 650;
+    final hasAsOfDate = state.balanceSheetAsOfDate != null;
+
+    if (isMobile) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () =>
+                    _showBalanceSheetFilterBottomSheet(context, state, isDark),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hasAsOfDate
+                        ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                        : (isDark
+                              ? AppColors.darkCard
+                              : AppColors.lightSurface),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: hasAsOfDate
+                          ? AppColors.primaryGreen.withValues(alpha: 0.4)
+                          : (isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 14,
+                        color: hasAsOfDate
+                            ? AppColors.primaryGreen
+                            : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          asOfSubtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: hasAsOfDate
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: hasAsOfDate ? AppColors.primaryGreen : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: 18,
+                        color: hasAsOfDate
+                            ? AppColors.primaryGreen
+                            : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (hasAsOfDate) ...[
+              const SizedBox(width: 6),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Reset to Latest',
+                icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
+                onPressed: () => context
+                    .read<FinancialReportsCubit>()
+                    .clearBalanceSheetDate(),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Tablet & Desktop: Horizontal chips row
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            // All Time / Latest FilterChip
+            FilterChip(
+              selected: !hasAsOfDate,
+              label: const Text('လက်ရှိအထိ (All Time / Latest)'),
+              onSelected: (_) {
+                context.read<FinancialReportsCubit>().clearBalanceSheetDate();
+              },
+              selectedColor: AppColors.primaryGreen.withValues(alpha: 0.18),
+              checkmarkColor: AppColors.primaryGreen,
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: !hasAsOfDate ? FontWeight.bold : FontWeight.normal,
+                color: !hasAsOfDate ? AppColors.primaryGreen : null,
+              ),
+            ),
+            const SizedBox(width: 10),
+
+            Container(
+              height: 20,
+              width: 1,
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+            const SizedBox(width: 10),
+
+            // As of Date ActionChip
+            ActionChip(
+              avatar: Icon(
+                Icons.event,
+                size: 15,
+                color: hasAsOfDate ? AppColors.primaryGreen : Colors.grey,
+              ),
+              label: Text(
+                hasAsOfDate
+                    ? 'ရက်စွဲအထိ (As of ${state.balanceSheetAsOfDate})'
+                    : 'ရက်စွဲဖြတ်တောက်ရန် (Cut-off Date)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: hasAsOfDate ? FontWeight.bold : FontWeight.normal,
+                  color: hasAsOfDate ? AppColors.primaryGreen : null,
+                ),
+              ),
+              backgroundColor: hasAsOfDate
+                  ? AppColors.primaryGreen.withValues(alpha: 0.12)
+                  : null,
+              side: hasAsOfDate
+                  ? const BorderSide(color: AppColors.primaryGreen)
+                  : null,
+              onPressed: () => _pickBalanceSheetDate(context, state),
+            ),
+            if (hasAsOfDate) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(),
+                tooltip: 'Reset to Today / All Time',
+                icon: const Icon(Icons.cancel, size: 16, color: Colors.grey),
+                onPressed: () => context
+                    .read<FinancialReportsCubit>()
+                    .clearBalanceSheetDate(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBalanceSheetFilterBottomSheet(
+    BuildContext context,
+    FinancialReportsState state,
+    bool isDark,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+      builder: (ctx) {
+        final hasAsOfDate = state.balanceSheetAsOfDate != null;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'ဖြတ်တောက်ရက်စွဲ (As of Cut-off Date)',
+                        style: Theme.of(context).textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (hasAsOfDate)
+                        TextButton(
+                          onPressed: () {
+                            context
+                                .read<FinancialReportsCubit>()
+                                .clearBalanceSheetDate();
+                            Navigator.pop(ctx);
+                          },
+                          child: const Text(
+                            'Reset',
+                            style: TextStyle(
+                              color: AppColors.creditRose,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 12),
+                ListTile(
+                  leading: const Icon(
+                    Icons.all_inclusive,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: const Text('လက်ရှိအထိ (All Time / Latest)'),
+                  trailing: !hasAsOfDate
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    context
+                        .read<FinancialReportsCubit>()
+                        .clearBalanceSheetDate();
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.event,
+                    color: AppColors.primaryGreen,
+                  ),
+                  title: Text(
+                    hasAsOfDate
+                        ? 'ရက်စွဲအထိ: As of ${state.balanceSheetAsOfDate}'
+                        : 'ရက်စွဲဖြတ်တောက်ရန် (Pick Cut-off Date)...',
+                  ),
+                  trailing: hasAsOfDate
+                      ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                      : null,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickBalanceSheetDate(context, state);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickBalanceSheetDate(
+    BuildContext context,
+    FinancialReportsState state,
+  ) async {
+    DateTime initial = DateTime.now();
+    if (state.balanceSheetAsOfDate != null) {
+      initial = DateTime.tryParse(state.balanceSheetAsOfDate!) ?? initial;
+    }
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.primaryGreen,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && context.mounted) {
+      final dateStr = picked.toIso8601String().substring(0, 10);
+      context.read<FinancialReportsCubit>().setBalanceSheetAsOfDate(dateStr);
+    }
   }
 }
