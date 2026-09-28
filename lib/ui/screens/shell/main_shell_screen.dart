@@ -108,12 +108,12 @@ class _MainShellScreenState extends State<MainShellScreen> {
                                   Text(
                                     'Accounting\nMyanmar',
                                     textAlign: TextAlign.center,
-                                    style:
-                                        theme.textTheme.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.2,
-                                      letterSpacing: 0.2,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.2,
+                                          letterSpacing: 0.2,
+                                        ),
                                   ),
                                 ],
                               ),

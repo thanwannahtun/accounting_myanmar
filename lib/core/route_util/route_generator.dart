@@ -1,6 +1,7 @@
 import '../../ui/screens/dashboard/cash_flow_activity_screen.dart';
 import '../../ui/screens/shell/main_shell_screen.dart';
 import '../../ui/screens/splash/splash_screen.dart';
+import '../widgets/confirm_exit_wrapper.dart';
 import 'route_names.dart';
 
 import 'package:flutter/material.dart';
@@ -18,7 +19,8 @@ class RouteGenerator {
       case RouteNames.app:
         return _navigateRoute(
           settings: settings,
-          builder: (context) => const MainShellScreen(),
+          builder: (context) =>
+              ConfirmExitWrapper(child: const MainShellScreen()),
         );
       case RouteNames.cashFlowActivity:
         return _navigateRoute(
@@ -28,7 +30,8 @@ class RouteGenerator {
       default:
         return _navigateRoute(
           settings: settings,
-          builder: (context) => const MainShellScreen(),
+          builder: (context) =>
+              ConfirmExitWrapper(child: const MainShellScreen()),
         );
     }
   }

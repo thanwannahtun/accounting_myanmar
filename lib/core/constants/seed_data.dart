@@ -62,7 +62,7 @@ class SeedData {
     const Account(
       id: 'a5100',
       code: '5100',
-      name: 'FOC & Damages (အခမဲ့ပေးနှင့် ပျက်စီးဆုံးရှုံး)',
+      name: 'FOC & Loss/Damages (အခမဲ့ပေးနှင့် ပျက်စီးဆုံးရှုံး)',
       type: AccountTypes.expense,
     ),
     const Account(
@@ -292,7 +292,8 @@ class SeedData {
     const JournalEntry(
       id: 't3',
       date: '2026-09-08',
-      description: '၃။ ဝန်ထမ်းများကို နေ့စားလစာ ပေးချေခြင်း (Paying Daily Salaries)',
+      description:
+          '၃။ ဝန်ထမ်းများကို နေ့စားလစာ ပေးချေခြင်း (Paying Daily Salaries)',
       lines: [
         JournalEntryLine(
           id: 'l7a',
@@ -355,7 +356,8 @@ class SeedData {
     const JournalEntry(
       id: 't5_2',
       date: '2026-09-11',
-      description: '၅.၂ Supplier ထံမှ မိမိက FOC ရရှိခြင်း (FOC Received on Purchase)',
+      description:
+          '၅.၂ Supplier ထံမှ မိမိက FOC ရရှိခြင်း (FOC Received on Purchase)',
       lines: [
         JournalEntryLine(
           id: 'l10a',
@@ -376,7 +378,8 @@ class SeedData {
     const JournalEntry(
       id: 't6_1',
       date: '2026-09-12',
-      description: '၆.၁ ဖောက်သည်က အကြွေးလာဆပ်ခြင်း (Collecting Payment from AR)',
+      description:
+          '၆.၁ ဖောက်သည်က အကြွေးလာဆပ်ခြင်း (Collecting Payment from AR)',
       lines: [
         JournalEntryLine(
           id: 'l11a',
@@ -439,7 +442,8 @@ class SeedData {
     const JournalEntry(
       id: 't6_3b',
       date: '2026-09-30',
-      description: 'ရုံးခန်းငှားရမ်းခ ၁ လစာ စာရင်းပြောင်းခြင်း (Amortize 1 month Rent)',
+      description:
+          'ရုံးခန်းငှားရမ်းခ ၁ လစာ စာရင်းပြောင်းခြင်း (Amortize 1 month Rent)',
       lines: [
         JournalEntryLine(
           id: 'l14a',
