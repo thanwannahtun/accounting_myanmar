@@ -5,13 +5,7 @@ class AccountTypes {
   static const String revenue = 'Revenue';
   static const String expense = 'Expense';
 
-  static const List<String> all = [
-    asset,
-    liability,
-    equity,
-    revenue,
-    expense,
-  ];
+  static const List<String> all = [asset, liability, equity, revenue, expense];
 
   static bool isNormalDebit(String type) {
     return type == asset || type == expense;

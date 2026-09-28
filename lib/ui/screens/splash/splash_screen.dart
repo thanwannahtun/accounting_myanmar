@@ -180,10 +180,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Dismiss loading dialog and navigate to app
     Navigator.of(context, rootNavigator: true).pop();
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      RouteNames.app,
-      (route) => false,
-    );
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(RouteNames.app, (route) => false);
   }
 
   @override
@@ -196,15 +194,15 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(35),
+              padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
                 color: AppColors.primaryGreen.withAlpha(30),
                 shape: BoxShape.circle,
               ),
               child: Image.asset(
                 "assets/images/app_icon_foreground.png",
-                width: 200,
-                height: 200,
+                width: 100,
+                height: 100,
                 fit: BoxFit.contain,
               ),
             ),

@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../core/constants/account_types.dart';
 import '../../data/models/account.dart';
@@ -13,12 +15,10 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
   final ExportService _exportService;
   final PrintService _printService;
 
-  GeneralLedgerCubit({
-    ExportService? exportService,
-    PrintService? printService,
-  })  : _exportService = exportService ?? ExportService.instance,
-        _printService = printService ?? PrintService.instance,
-        super(const GeneralLedgerState());
+  GeneralLedgerCubit({ExportService? exportService, PrintService? printService})
+    : _exportService = exportService ?? ExportService.instance,
+      _printService = printService ?? PrintService.instance,
+      super(const GeneralLedgerState());
 
   void selectAccount({
     required Account account,
@@ -28,19 +28,89 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
     try {
       final entries = _computeLedgerEntries(account, transactions);
       final endingBalance = entries.isNotEmpty ? entries.last.balance : 0.0;
-      emit(state.copyWith(
-        status: BlocStatus.success,
-        selectedAccount: account,
-        entries: entries,
-        endingBalance: endingBalance,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          status: BlocStatus.success,
+          selectedAccount: account,
+          entries: entries,
+          endingBalance: endingBalance,
+          pageLimit: 20,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: BlocStatus.failure,
-        errorMessage: 'Failed to compute ledger entries: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: BlocStatus.failure,
+          errorMessage: 'Failed to compute ledger entries: $e',
+        ),
+      );
     }
+  }
+
+  void setDateFilterMode(String mode) {
+    if (mode == 'all') {
+      emit(
+        state.copyWith(dateFilterMode: 'all', clearDates: true, pageLimit: 20),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    if (mode == 'this_month') {
+      final start = DateFormat('yyyy-MM-01').format(now);
+      final lastDay = DateTime(now.year, now.month + 1, 0);
+      final end = DateFormat('yyyy-MM-dd').format(lastDay);
+      emit(
+        state.copyWith(
+          dateFilterMode: 'this_month',
+          startDate: start,
+          endDate: end,
+          pageLimit: 20,
+        ),
+      );
+      return;
+    }
+
+    if (mode == 'this_year') {
+      final start = '${now.year}-01-01';
+      final end = '${now.year}-12-31';
+      emit(
+        state.copyWith(
+          dateFilterMode: 'this_year',
+          startDate: start,
+          endDate: end,
+          pageLimit: 20,
+        ),
+      );
+      return;
+    }
+  }
+
+  void setCustomDateRange(String start, String end) {
+    emit(
+      state.copyWith(
+        dateFilterMode: 'custom',
+        startDate: start,
+        endDate: end,
+        pageLimit: 20,
+      ),
+    );
+  }
+
+  void clearDateFilter() {
+    emit(
+      state.copyWith(dateFilterMode: 'all', clearDates: true, pageLimit: 20),
+    );
+  }
+
+  void setSearchQuery(String query) {
+    emit(state.copyWith(searchQuery: query, pageLimit: 20));
+  }
+
+  void loadMoreEntries() {
+    if (!state.hasMore) return;
+    emit(state.copyWith(pageLimit: state.pageLimit + 20));
   }
 
   void refresh({
@@ -55,8 +125,9 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
     Account targetAccount;
     if (state.selectedAccount != null &&
         accounts.any((a) => a.id == state.selectedAccount!.id)) {
-      targetAccount =
-          accounts.firstWhere((a) => a.id == state.selectedAccount!.id);
+      targetAccount = accounts.firstWhere(
+        (a) => a.id == state.selectedAccount!.id,
+      );
     } else {
       targetAccount = accounts.first;
     }
@@ -111,20 +182,24 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
     try {
       final res = await _exportService.exportGeneralLedgerToCsv(
         account: state.selectedAccount!,
-        entries: state.entries,
+        entries: state.filteredEntries,
         printConfig: config,
       );
-      emit(state.copyWith(
-        status: BlocStatus.success,
-        lastExport: res,
-        errorMessage: null,
-      ));
+      emit(
+        state.copyWith(
+          status: BlocStatus.success,
+          lastExport: res,
+          errorMessage: null,
+        ),
+      );
       return res;
     } catch (e) {
-      emit(state.copyWith(
-        status: BlocStatus.failure,
-        errorMessage: 'Export failed: $e',
-      ));
+      emit(
+        state.copyWith(
+          status: BlocStatus.failure,
+          errorMessage: 'Export failed: $e',
+        ),
+      );
       return null;
     }
   }
@@ -133,7 +208,7 @@ class GeneralLedgerCubit extends Cubit<GeneralLedgerState> {
     if (state.selectedAccount == null) return null;
     final doc = _printService.generateGeneralLedgerPrintDocument(
       account: state.selectedAccount!,
-      entries: state.entries,
+      entries: state.filteredEntries,
       config: config,
     );
     emit(state.copyWith(lastPrintDoc: doc));
