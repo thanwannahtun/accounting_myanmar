@@ -1,10 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ConfirmExitWrapper extends StatelessWidget {
+class ConfirmExitWrapper extends StatefulWidget {
   final Widget child;
 
   const ConfirmExitWrapper({super.key, required this.child});
+
+  static ConfirmExitWrapperState? of(BuildContext context) {
+    return context.findAncestorStateOfType<ConfirmExitWrapperState>();
+  }
+
+  @override
+  State<ConfirmExitWrapper> createState() => ConfirmExitWrapperState();
+}
+
+class ConfirmExitWrapperState extends State<ConfirmExitWrapper> {
+  FutureOr<bool> Function()? _customPopHandler;
+
+  void setCustomPopHandler(FutureOr<bool> Function()? handler) {
+    _customPopHandler = handler;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +29,13 @@ class ConfirmExitWrapper extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+
+        if (_customPopHandler != null) {
+          final handled = await _customPopHandler!();
+          if (handled) return;
+        }
+
+        if (!context.mounted) return;
 
         final shouldExit = await showDialog<bool>(
           context: context,
@@ -24,11 +48,11 @@ class ConfirmExitWrapper extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text("No (I want to stay!)"),
+                  child: const Text("Oops, no"),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Exit (Yes I am)"),
+                  child: const Text("See ya👋"),
                 ),
               ],
             );
@@ -39,7 +63,7 @@ class ConfirmExitWrapper extends StatelessWidget {
           SystemNavigator.pop(); // Closes the app
         }
       },
-      child: child,
+      child: widget.child,
     );
   }
 }

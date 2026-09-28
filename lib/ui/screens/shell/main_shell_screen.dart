@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/confirm_exit_wrapper.dart';
 import '../accounts/chart_of_accounts_screen.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -18,6 +19,31 @@ class MainShellScreen extends StatefulWidget {
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentIndex = 0;
+  ConfirmExitWrapperState? _confirmExitState;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _confirmExitState = ConfirmExitWrapper.of(context);
+    _confirmExitState?.setCustomPopHandler(_handlePop);
+  }
+
+  @override
+  void dispose() {
+    _confirmExitState?.setCustomPopHandler(null);
+    _confirmExitState = null;
+    super.dispose();
+  }
+
+  bool _handlePop() {
+    if (_currentIndex != 0) {
+      setState(() {
+        _currentIndex = 0;
+      });
+      return true; // Handled: navigated back to DashboardScreen without exiting
+    }
+    return false; // Already on DashboardScreen: allow confirm exit dialog to show
+  }
 
   void _navigateToIndex(int index, bool isWideScreen) {
     if (!isWideScreen) {
