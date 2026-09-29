@@ -11,6 +11,7 @@ import 'screens/print_config_screen.dart';
 import 'screens/printers_settings_screen.dart';
 import 'screens/profile_settings_screen.dart';
 import 'screens/storage_settings_screen.dart';
+import 'widgets/about_app_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -253,9 +254,7 @@ class SettingsScreen extends StatelessWidget {
                     const Divider(height: 1),
                     ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.blue.withValues(
-                          alpha: 0.12,
-                        ),
+                        backgroundColor: Colors.blue.withValues(alpha: 0.12),
                         child: const Icon(
                           Icons.language,
                           color: Colors.blue,
@@ -297,8 +296,7 @@ class SettingsScreen extends StatelessWidget {
                       icon: Icons.auto_stories,
                       iconColor: AppColors.primaryGreen,
                       title: 'Accounting Articles (စာရင်းကိုင် ဆောင်းပါးများ)',
-                      subtitle:
-                          'Beginner guides, Debit vs Credit, Balance Sheet, P&L, Double Entry & Tech',
+                      subtitle: 'Beginner guides, Debit vs Credit, Balance Sheet, P&L, Double Entry & Tech',
                       onTap: () {
                         Navigator.of(context).pushNamed(RouteNames.articles);
                       },
@@ -309,39 +307,77 @@ class SettingsScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Section: App About
+              // Section: App About (Clickable)
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 20,
-                            color: AppColors.primaryGreen,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Accounting Myanmar v1.0.0',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => AboutAppDialog.show(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              size: 20,
+                              color: AppColors.primaryGreen,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Clean Green Architecture • Double-Entry Bookkeeping Standard • Local SQLite Engine with MySQL Cloud Sync Compatibility',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Accounting Myanmar v1.0.0',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'အသေးစိတ်',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.primaryGreen,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    size: 14,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(
+                          'Clean Architecture • Double-Entry Bookkeeping Standard • 100% Offline-First (နှိပ်၍ အက်ပ်အကြောင်း အသေးစိတ် ဖတ်ရှုပါ)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

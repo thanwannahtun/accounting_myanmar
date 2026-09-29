@@ -20,7 +20,7 @@ accountingmyanmar/
 │       ├── 02_accounting_equation.md        # စာရင်းကိုင်ညီမျှခြင်း (Assets = Liabilities + Equity)
 │       ├── 03_debit_and_credit.md           # Debit နှင့် Credit (DEALER စည်းမျဉ်း)
 │       ├── 04_five_major_account_types.md   # အဓိက စာရင်းအမျိုးအစား ၅ မျိုး
-│       ├── 05_double_entry_workflow.md      # နှစ်ထပ်ကွမ်း စာရင်းကိုင်စနစ် လုပ်ငန်းစဉ်
+│       ├── 05_double_entry_workflow.md      # နှစ်ဘက်သွင်း စာရင်းကိုင်စနစ် လုပ်ငန်းစဉ်
 │       ├── 06_chart_of_accounts.md          # စာရင်းဇယား ရေးဆွဲသတ်မှတ်ခြင်း (COA)
 │       ├── 07_balance_sheet.md              # လက်ကျန်ရှင်းတမ်းကို နားလည်ခြင်း
 │       ├── 08_profit_and_loss.md            # အမြတ်အရှုံးစာရင်း ခွဲခြမ်းစိတ်ဖြာခြင်း
@@ -57,7 +57,7 @@ accountingmyanmar/
 | **02** | **စာရင်းကိုင်ညီမျှခြင်း**<br>*(The Accounting Equation)* | Foundations<br>(အခြေခံ) | Beginners, Developers, Accountants | ၆ မိနစ် |
 | **03** | **Debit နှင့် Credit အမှန်တကယ် နားလည်ခြင်း**<br>*(Debit vs Credit - Golden Rules)* | Core Concepts<br>(အဓိက သဘောတရား) | Beginners, Developers, Accountants | ၇ မိနစ် |
 | **04** | **အဓိက စာရင်းအမျိုးအစား ၅ မျိုး**<br>*(The 5 Major Account Types)* | Core Concepts<br>(အဓိက သဘောတရား) | Beginners, Accountants, SMEs | ၆ မိနစ် |
-| **05** | **နှစ်ထပ်ကွမ်း စာရင်းကိုင်စနစ် လုပ်ငန်းစဉ်**<br>*(Double-Entry Bookkeeping Flow)* | Practical Workflows<br>(လက်တွေ့လုပ်ငန်းစဉ်) | Business Owners, Accountants, Devs | ၇ မိနစ် |
+| **05** | **နှစ်ဘက်သွင်း စာရင်းကိုင်စနစ် လုပ်ငန်းစဉ်**<br>*(Double-Entry Bookkeeping Flow)* | Practical Workflows<br>(လက်တွေ့လုပ်ငန်းစဉ်) | Business Owners, Accountants, Devs | ၇ မိနစ် |
 | **06** | **စာရင်းဇယား ရေးဆွဲသတ်မှတ်ခြင်း**<br>*(Chart of Accounts - COA Guide)* | Practical Workflows<br>(လက်တွေ့လုပ်ငန်းစဉ်) | Business Owners, Accountants, Devs | ၆ မိနစ် |
 | **07** | **လက်ကျန်ရှင်းတမ်းကို နားလည်ခြင်း**<br>*(Understanding the Balance Sheet)* | Financial Statements<br>(ဘဏ္ဍာရေးရှင်းတမ်း) | Business Owners, Investors, Accountants | ၇ မိနစ် |
 | **08** | **အမြတ်အရှုံးစာရင်းကို ခွဲခြမ်းစိတ်ဖြာခြင်း**<br>*(Profit and Loss Statement - P&L)* | Financial Statements<br>(ဘဏ္ဍာရေးရှင်းတမ်း) | Business Owners, SMEs, Beginners | ၆ မိနစ် |
