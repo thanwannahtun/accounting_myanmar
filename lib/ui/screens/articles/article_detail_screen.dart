@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/article_model.dart';
@@ -34,6 +34,47 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     _loadArticleContent();
   }
 
+  String _cleanMarkdownContent(String raw) {
+    var content = raw;
+    // Replace HTML line breaks with clean space/divider where found
+    content = content.replaceAll(
+      RegExp(r'<br\s*/?>', caseSensitive: false),
+      ' / ',
+    );
+
+    // Clean LaTeX block equations: $$\text{...} = ...$$ -> clean blockquotes
+    content = content.replaceAllMapped(RegExp(r'\$\$(.*?)\$\$', dotAll: true), (
+      match,
+    ) {
+      var math = match.group(1) ?? '';
+      math = math.replaceAll(RegExp(r'\\text\{(.*?)\}'), r'$1');
+      math = math.replaceAll(r'\quad', '  ');
+      math = math.replaceAll(r'\times', '×');
+      math = math.replaceAll(r'\rightarrow', '→');
+      math = math.replaceAll(r'\sum', '∑');
+      math = math.replaceAll(r'\left(', '(').replaceAll(r'\right)', ')');
+      math = math.replaceAllMapped(
+        RegExp(r'\\frac\{(.*?)\}\{(.*?)\}'),
+        (fracMatch) => '(${fracMatch.group(1)} ÷ ${fracMatch.group(2)})',
+      );
+      math = math.trim();
+      return '\n\n> 💡 **$math**\n\n';
+    });
+
+    // Clean inline math: $\text{...}$ or $...$
+    content = content.replaceAllMapped(RegExp(r'\$(.*?)\$'), (match) {
+      var math = match.group(1) ?? '';
+      math = math.replaceAll(RegExp(r'\\text\{(.*?)\}'), r'$1');
+      math = math.replaceAll(r'\rightarrow', '→');
+      return '**${math.trim()}**';
+    });
+
+    // Clean any remaining unparsed LaTeX arrows
+    content = content.replaceAll(r'\rightarrow', '→');
+
+    return content;
+  }
+
   Future<void> _loadArticleContent() async {
     setState(() {
       _isLoading = true;
@@ -45,7 +86,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       final text = await repo.getArticleContent(_currentArticle.filePath);
       if (mounted) {
         setState(() {
-          _content = text;
+          _content = _cleanMarkdownContent(text);
           _isLoading = false;
         });
       }
@@ -77,6 +118,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isWide = MediaQuery.sizeOf(context).width >= 600;
 
     final currentIndex = widget.allArticles.indexWhere(
       (a) => a.id == _currentArticle.id,
@@ -163,7 +205,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Category & Read Time
-                            Row(
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -185,11 +229,12 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                     ),
                                   ),
                                 ),
-                                const Spacer(),
                                 Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Icon(
-                                      Icons.timer_outlined,
+                                      Icons.access_time,
                                       size: 14,
                                       color: isDark
                                           ? Colors.grey[400]
@@ -197,7 +242,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${_currentArticle.readTimeMinutes} မိနစ် ဖတ်ရှုရန်',
+                                      '${_currentArticle.readTimeMinutes} မိနစ်ဖတ်ရန်',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: isDark
@@ -209,30 +254,66 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
-                            // Subtitle
+                            const SizedBox(height: 12),
+
+                            // Title (Burmese)
                             Text(
-                              _currentArticle.subtitleMm,
+                              _currentArticle.titleMm,
+                              style: const TextStyle(
+                                fontFamily: 'Pyidaungsu',
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+
+                            // Title (English)
+                            Text(
+                              _currentArticle.titleEn,
                               style: TextStyle(
-                                fontSize: 14 * _fontScale,
+                                fontSize: 14,
                                 color: isDark
-                                    ? Colors.grey[300]
-                                    : Colors.grey[700],
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            // Target Audience chips
+
+                            // Subtitle
+                            Text(
+                              _currentArticle.subtitleMm,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.grey[300]
+                                    : Colors.grey[700],
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Target Audiences Chips
                             Wrap(
                               spacing: 6,
                               runSpacing: 4,
                               children: _currentArticle.targetAudience
                                   .map(
                                     (aud) => Chip(
-                                      label: Text(
-                                        aud,
-                                        style: const TextStyle(fontSize: 11),
+                                      avatar: const Icon(
+                                        Icons.person_outline,
+                                        size: 13,
+                                        color: AppColors.assetBlue,
                                       ),
+                                      label: Text(aud),
+                                      labelStyle: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.assetBlue,
+                                      ),
+                                      backgroundColor: AppColors.assetBlue
+                                          .withValues(alpha: 0.1),
+                                      side: BorderSide.none,
                                       padding: EdgeInsets.zero,
                                       materialTapTargetSize:
                                           MaterialTapTargetSize.shrinkWrap,
@@ -322,6 +403,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                       ? AppColors.darkBorder
                                       : AppColors.lightBorder,
                                   width: 1,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(15),
+                                  ),
                                 ),
                                 tableHead: TextStyle(
                                   fontFamily: 'Pyidaungsu',
@@ -331,6 +415,18 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                       ? Colors.white
                                       : const Color(0xFF0F172A),
                                 ),
+                                tableHeadCellsDecoration: BoxDecoration(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                    topRight: Radius.circular(15),
+                                  ),
+                                  color: isDark
+                                      ? AppColors.primaryGreen.withValues(
+                                          alpha: 0.12,
+                                        )
+                                      : AppColors.greenContainerLight
+                                            .withValues(alpha: 0.5),
+                                ),
                                 tableHeadAlign: TextAlign.left,
                                 tableBody: TextStyle(
                                   fontFamily: 'Pyidaungsu',
@@ -338,20 +434,22 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   height: 1.4,
                                 ),
                                 tableCellsPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
+                                  horizontal: 12,
+                                  vertical: 10,
                                 ),
+                                tableColumnWidth: const IntrinsicColumnWidth(),
+                                tableScrollbarThumbVisibility: true,
                                 code: TextStyle(
                                   fontFamily: 'monospace',
                                   fontSize: 13 * _fontScale,
-                                  backgroundColor: isDark
-                                      ? Colors.white.withValues(alpha: 0.1)
-                                      : Colors.black.withValues(alpha: 0.06),
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimary,
                                 ),
                                 codeblockDecoration: BoxDecoration(
-                                  color: isDark
-                                      ? const Color(0xFF0F172A)
-                                      : const Color(0xFF1E293B),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimary,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 codeblockPadding: const EdgeInsets.all(14),
@@ -380,95 +478,192 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                         child: Column(
                           children: [
                             const Divider(height: 32),
-                            Row(
-                              children: [
-                                if (prevArticle != null)
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                          horizontal: 8,
+                            if (isWide)
+                              // Wide Screen: Side-by-side Row
+                              Row(
+                                children: [
+                                  if (prevArticle != null)
+                                    Expanded(
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 10,
+                                          ),
+                                          alignment: Alignment.centerLeft,
                                         ),
-                                        alignment: Alignment.centerLeft,
-                                      ),
-                                      onPressed: () =>
-                                          _switchArticle(prevArticle),
-                                      icon: const Icon(
-                                        Icons.arrow_back,
-                                        size: 16,
-                                      ),
-                                      label: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'ယခင် ဆောင်းပါး',
-                                            style: TextStyle(fontSize: 10),
-                                          ),
-                                          Text(
-                                            prevArticle.titleMm,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                        onPressed: () =>
+                                            _switchArticle(prevArticle),
+                                        icon: const Icon(
+                                          Icons.arrow_back,
+                                          size: 16,
+                                        ),
+                                        label: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'ယခင် ဆောင်းပါး',
+                                              style: TextStyle(fontSize: 10),
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            Text(
+                                              prevArticle.titleMm,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    const Spacer(),
+                                  const SizedBox(width: 12),
+                                  if (nextArticle != null)
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryGreen,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 10,
                                           ),
-                                        ],
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        onPressed: () =>
+                                            _switchArticle(nextArticle),
+                                        icon: const Icon(
+                                          Icons.arrow_forward,
+                                          size: 16,
+                                        ),
+                                        label: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            const Text(
+                                              'နောက်ဆောင်းပါး',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                            Text(
+                                              nextArticle.titleMm,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    const Spacer(),
+                                ],
+                              )
+                            else
+                              // Mobile View: Full-width stacked buttons
+                              Column(
+                                children: [
+                                  if (prevArticle != null)
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 12,
+                                          ),
+                                          alignment: Alignment.centerLeft,
+                                        ),
+                                        onPressed: () =>
+                                            _switchArticle(prevArticle),
+                                        icon: const Icon(
+                                          Icons.arrow_back,
+                                          size: 16,
+                                        ),
+                                        label: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'ယခင် ဆောင်းပါး (Previous Article)',
+                                              style: TextStyle(fontSize: 10),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              prevArticle.titleMm,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  )
-                                else
-                                  const Spacer(),
-                                const SizedBox(width: 12),
-                                if (nextArticle != null)
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryGreen,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                          horizontal: 8,
+                                  if (prevArticle != null &&
+                                      nextArticle != null)
+                                    const SizedBox(height: 10),
+                                  if (nextArticle != null)
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppColors.primaryGreen,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 12,
+                                          ),
+                                          alignment: Alignment.centerLeft,
                                         ),
-                                        alignment: Alignment.centerRight,
-                                      ),
-                                      onPressed: () =>
-                                          _switchArticle(nextArticle),
-                                      icon: const Icon(
-                                        Icons.arrow_forward,
-                                        size: 16,
-                                      ),
-                                      label: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          const Text(
-                                            'နောက်ဆောင်းပါး',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.white70,
+                                        onPressed: () =>
+                                            _switchArticle(nextArticle),
+                                        icon: const Icon(
+                                          Icons.arrow_forward,
+                                          size: 16,
+                                        ),
+                                        label: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'နောက်ဆောင်းပါး (Next Article)',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.white70,
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            nextArticle.titleMm,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              nextArticle.titleMm,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  )
-                                else
-                                  const Spacer(),
-                              ],
-                            ),
+                                ],
+                              ),
                             const SizedBox(height: 24),
                           ],
                         ),

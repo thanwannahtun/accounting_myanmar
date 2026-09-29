@@ -132,4 +132,11 @@ accountingmyanmar/
     3. **Compact Mobile Banner:** Mobile မျက်နှာပြင်တွင် Knowledge Hub Banner အား 1-line icon + title + short subtitle ဖြင့် နေရာချုံ့ပေးခဲ့ရာ ဒေါင်လိုက်နေရာယူမှုကို 320px+ မှ ~145px သို့ 55% ကျော် လျှော့ချပေးနိုင်ခဲ့ပါသည်။
     4. **Standard Responsive Padding:** App တစ်ခုလုံး၏ UI/UX စံနှုန်းနှင့်အညီ `EdgeInsets.symmetric(horizontal: MediaQuery.sizeOf(context).width * 0.05, ...)` ကို `articles_list_screen.dart` နှင့် `article_detail_screen.dart` ရှိ အစိတ်အပိုင်းအားလုံးတွင် တပြေးညီ အစားထိုး အသုံးပြုထားပါသည်။
 
+* **Markdown Package Migration (`flutter_markdown_plus`) & Content Rendering Polish:**
+  * **Package Migration:** Discontinued ဖြစ်သွားသော Google ၏ `flutter_markdown` အား Foresight Mobile မှ တက်ကြွစွာ ထိန်းသိမ်းထားသော တရားဝင် ဆက်ခံသူ `flutter_markdown_plus: ^1.0.12` သို့ အောင်မြင်စွာ ပြောင်းလဲရွှေ့ပြောင်းပြီးဖြစ်ပါသည်။
+  * **Table Horizontal Scroll Support:** `02_accounting_equation.md` ကဲ့သို့သော ဇယားရှည်များတွင် Mobile မျက်နှာပြင် ကျဉ်းမြောင်းမှုကြောင့် စာလုံးများ ညှပ်ဖိသွားခြင်း မဖြစ်စေရန် `MarkdownStyleSheet` တွင် `tableColumnWidth: const IntrinsicColumnWidth()` နှင့် `tableScrollbarThumbVisibility: true` ကို သတ်မှတ်ပေးခဲ့ရာ Mobile တွင် အလျားလိုက် သဘာဝအတိုင်း ချောမွေ့စွာ Scroll ဆွဲဖတ်ရှုနိုင်ပြီ ဖြစ်ပါသည်။
+  * **Clean Markdown Syntax (LaTeX & `<br>` Cleanup):** ဇယားကွက်များအတွင်းရှိ `<br>` HTML tags များနှင့် `$$\text{...}$$` ကဲ့သို့သော unparsed LaTeX သင်္ကေတများအား ဖယ်ရှား၍ လှပသော Native Markdown Callout Quote (`> 💡 **Formula**`) များအဖြစ် အစားထိုးပြင်ဆင်ပေးခဲ့ပါသည်။ ထို့အပြင် `article_detail_screen.dart` တွင် အနာဂတ်အတွက်ပါ Regex Defensive Preprocessor ထည့်သွင်းထားသဖြင့် Syntax အမှားများ မည်သည့်အခါမျှ အသုံးပြုသူထံ မရောက်ရှိနိုင်ပါ။
+  * **Responsive Previous / Next Bottom Navigation:** မျက်နှာပြင်ကျဉ်းသော Mobile View တွင် အလျားလိုက် ခလုတ် ၂ ခု ညှပ်သွားခြင်းကို ကာကွယ်ရန် Full-width ဒေါင်လိုက်ခလုတ်များ (`width: double.infinity`) အဖြစ် ပြောင်းလဲပေးထားပြီး၊ Tablet / Wide Screen များတွင် မူလအတိုင်း ဘေးချင်းယှဉ် (Side-by-side Row) အဖြစ် အလိုအလျောက် Adaptive ဖြစ်စေပါသည်။
+
+
 

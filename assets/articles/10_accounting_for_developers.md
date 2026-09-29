@@ -30,7 +30,9 @@ UPDATE accounts SET balance = balance + 50000 WHERE id = 101;
 
 ### ၂။ Zero-Sum Verification (Debit စုစုပေါင်း = Credit စုစုပေါင်း)
 အရောင်းအဝယ်တစ်ခု (Transaction) တွင် အနည်းဆုံး လိုင်း (၂) လိုင်း ပါဝင်ရမည်ဖြစ်ပြီး အမြဲတမ်း-
-$$\sum \text{Debit} = \sum \text{Credit} \quad \text{သို့မဟုတ်} \quad \sum (\text{Debit} - \text{Credit}) = 0$$
+
+> 💡 **Total Debit = Total Credit** &nbsp;&nbsp; *(သို့မဟုတ်)* &nbsp;&nbsp; **∑(Debit - Credit) = 0**
+
 ဖြစ်နေရမည်။ Database Constraint သို့မဟုတ် Application Layer တွင် ဤအချက်ကို မဖြစ်မနေ စစ်ဆေးရပါမည်။
 
 ### ၃။ The Floating-Point Catastrophe (Float / Double လုံးဝ မသုံးပါနှင့်)
