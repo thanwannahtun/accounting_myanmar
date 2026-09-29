@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../cubit/theme_mode/theme_mode_cubit.dart';
 import '../../../logic/settings/settings_cubit.dart';
@@ -39,8 +40,8 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 26,
-                        backgroundColor: AppColors.primaryGreen.withOpacity(
-                          0.15,
+                        backgroundColor: AppColors.primaryGreen.withValues(
+                          alpha: 0.15,
                         ),
                         child: const Icon(
                           Icons.business,
@@ -201,7 +202,9 @@ class SettingsScreen extends StatelessWidget {
                       builder: (context, themeMode) {
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.amber.withOpacity(0.12),
+                            backgroundColor: Colors.amber.withValues(
+                              alpha: 0.12,
+                            ),
                             child: const Icon(
                               Icons.brightness_6,
                               color: Colors.amber,
@@ -250,7 +253,9 @@ class SettingsScreen extends StatelessWidget {
                     const Divider(height: 1),
                     ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.blue.withOpacity(0.12),
+                        backgroundColor: Colors.blue.withValues(
+                          alpha: 0.12,
+                        ),
                         child: const Icon(
                           Icons.language,
                           color: Colors.blue,
@@ -273,6 +278,30 @@ class SettingsScreen extends StatelessWidget {
                         color: AppColors.primaryGreen,
                         size: 20,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Section: Knowledge Base & Guides
+              _buildSectionTitle(
+                'KNOWLEDGE BASE & GUIDES (ဗဟုသုတနှင့် လမ်းညွှန်များ)',
+                isDark,
+              ),
+              Card(
+                child: Column(
+                  children: [
+                    _buildSettingsTile(
+                      icon: Icons.auto_stories,
+                      iconColor: AppColors.primaryGreen,
+                      title: 'Accounting Articles (စာရင်းကိုင် ဆောင်းပါးများ)',
+                      subtitle:
+                          'Beginner guides, Debit vs Credit, Balance Sheet, P&L, Double Entry & Tech',
+                      onTap: () {
+                        Navigator.of(context).pushNamed(RouteNames.articles);
+                      },
                     ),
                   ],
                 ),
@@ -348,7 +377,7 @@ class SettingsScreen extends StatelessWidget {
   }) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: iconColor.withOpacity(0.12),
+        backgroundColor: iconColor.withValues(alpha: 0.12),
         child: Icon(icon, color: iconColor, size: 20),
       ),
       title: Text(

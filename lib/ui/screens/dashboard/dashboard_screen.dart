@@ -54,6 +54,15 @@ class DashboardScreen extends StatelessWidget {
             title: const Text('Dashboard (ပင်မဒက်ရှ်ဘုတ်)'),
             actions: [
               IconButton(
+                tooltip: 'Accounting Guides (ဗဟုသုတ ဆောင်းပါးများ)',
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(RouteNames.articles),
+                icon: const Icon(
+                  Icons.auto_stories_outlined,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+              IconButton(
                 tooltip: 'AI စာရင်းကိုင် လက်ထောက်',
                 onPressed: onNavigateToAi,
                 icon: const Icon(
@@ -197,7 +206,85 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+
+                  // Accounting Guides Card for learners (Non-mandatory & non-intrusive)
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isDark
+                            ? AppColors.darkBorder
+                            : AppColors.lightBorder,
+                      ),
+                    ),
+                    color: isDark
+                        ? AppColors.darkCard
+                        : AppColors.greenContainerLight.withValues(alpha: 0.35),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () =>
+                          Navigator.of(context).pushNamed(RouteNames.articles),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.auto_stories_outlined,
+                                color: AppColors.primaryGreen,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'စာရင်းကိုင် သဘောတရားများ လေ့လာရန် (Guides)',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Debit/Credit, Balance Sheet, P&L နှင့် အခြေခံသဘောတရား ဆောင်းပါးများ ဖတ်ရှုပါ',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: AppColors.primaryGreen,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Cash Flow Activity (Transactions affecting cash account a1000)
                   Card(

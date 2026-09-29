@@ -31,4 +31,5 @@ class RouteNames {
   static const String profileAccount = "/profile_account";
   static const String accounting = "/accounting";
   static const String cashFlowActivity = "/cash_flow_activity";
+  static const String articles = "/articles";
 }

@@ -1,3 +1,4 @@
+import '../../ui/screens/articles/articles_list_screen.dart';
 import '../../ui/screens/dashboard/cash_flow_activity_screen.dart';
 import '../../ui/screens/shell/main_shell_screen.dart';
 import '../../ui/screens/splash/splash_screen.dart';
@@ -26,6 +27,11 @@ class RouteGenerator {
         return _navigateRoute(
           settings: settings,
           builder: (context) => const CashFlowActivityScreen(),
+        );
+      case RouteNames.articles:
+        return _navigateRoute(
+          settings: settings,
+          builder: (context) => const ArticlesListScreen(),
         );
       default:
         return _navigateRoute(

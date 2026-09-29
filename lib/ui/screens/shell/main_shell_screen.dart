@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/confirm_exit_wrapper.dart';
 import '../accounts/chart_of_accounts_screen.dart';
@@ -181,6 +182,17 @@ class _MainShellScreenState extends State<MainShellScreen> {
                                 label: Text('Settings'),
                               ),
                             ],
+                            trailing: Padding(
+                              padding: const EdgeInsets.only(top: 16, bottom: 16),
+                              child: IconButton(
+                                tooltip: 'Articles & Guides (ဆောင်းပါးနှင့် လမ်းညွှန်)',
+                                icon: const Icon(
+                                  Icons.auto_stories_outlined,
+                                  color: AppColors.primaryGreen,
+                                ),
+                                onPressed: () => Navigator.of(context).pushNamed(RouteNames.articles),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -337,6 +349,35 @@ class _MainShellScreenState extends State<MainShellScreen> {
                           onTap: () {
                             Navigator.of(context).pop();
                             _navigateToIndex(5, false);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.auto_stories_outlined,
+                            color: AppColors.primaryGreen,
+                          ),
+                          title: const Text('Articles & Guides (ဆောင်းပါးနှင့် လမ်းညွှန်)'),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Learn',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryGreen,
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pushNamed(RouteNames.articles);
                           },
                         ),
                         ListTile(

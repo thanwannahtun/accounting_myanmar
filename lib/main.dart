@@ -11,6 +11,8 @@ import 'data/repositories/account/account_local_repository.dart';
 import 'data/repositories/account/account_repository_interface.dart';
 import 'data/repositories/ai/ai_assistant_repository_impl.dart';
 import 'data/repositories/ai/ai_assistant_repository_interface.dart';
+import 'data/repositories/articles/article_repository_impl.dart';
+import 'data/repositories/articles/article_repository_interface.dart';
 import 'data/repositories/journal/journal_entry_local_repository.dart';
 import 'data/repositories/journal/journal_entry_repository_interface.dart';
 import 'data/repositories/settings/settings_local_repository.dart';
@@ -60,6 +62,9 @@ class MyApp extends StatelessWidget {
         ),
         RepositoryProvider<AiAssistantRepositoryInterface>(
           create: (_) => AiAssistantRepositoryImpl(),
+        ),
+        RepositoryProvider<ArticleRepositoryInterface>(
+          create: (_) => ArticleRepositoryImpl(),
         ),
       ],
       child: MultiBlocProvider(
