@@ -88,4 +88,34 @@ class SettingsLocalRepository implements SettingsRepositoryInterface {
   Future<void> setDefaultPrinter(String printerName) {
     return _databaseService.setSetting(_defaultPrinterKey, printerName);
   }
+
+  @override
+  Future<String> getDatabasePath() {
+    return _databaseService.getDatabasePath();
+  }
+
+  @override
+  Future<int> getDatabaseSizeInBytes() {
+    return _databaseService.getDatabaseSizeInBytes();
+  }
+
+  @override
+  Future<List<int>> exportDatabaseBytes() {
+    return _databaseService.exportDatabaseBytes();
+  }
+
+  @override
+  Future<void> importDatabaseFromBytes(List<int> bytes) {
+    return _databaseService.importDatabaseFromBytes(bytes);
+  }
+
+  @override
+  Future<String?> getSetting(String key) {
+    return _databaseService.getSetting(key);
+  }
+
+  @override
+  Future<void> setSetting(String key, String value) {
+    return _databaseService.setSetting(key, value);
+  }
 }

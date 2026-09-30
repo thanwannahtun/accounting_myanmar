@@ -16,6 +16,7 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
   SqliteDatabaseService._();
 
   Database? _db;
+  String? _dbPath;
   static bool _ffiInitialized = false;
 
   @override
@@ -42,16 +43,25 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
         await dbFolder.create(recursive: true);
       }
       dbPath = p.join(dbFolder.path, 'accounting_myanmar.db');
+
+      // Check and migrate from legacy paths if target DB does not exist
+      await _checkAndMigrateLegacyDatabase(dbPath, appSupportDir);
     } else {
       final defaultDatabasesPath = await getDatabasesPath();
       dbPath = p.join(defaultDatabasesPath, 'accounting_myanmar.db');
     }
+    _dbPath = dbPath;
 
     _db = await openDatabase(
       dbPath,
       version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onDowngrade: (db, oldVersion, newVersion) async {
+        debugPrint(
+          '[SqliteDatabaseService] Preserving database across version change: $oldVersion -> $newVersion',
+        );
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -358,6 +368,184 @@ class SqliteDatabaseService implements DatabaseServiceInterface {
     if (_db != null && _db!.isOpen) {
       await _db!.close();
       _db = null;
+    }
+  }
+
+  /// Automatically searches for and safely migrates databases from legacy or
+  /// alternate desktop support folders if the target database does not yet exist.
+  Future<void> _checkAndMigrateLegacyDatabase(
+    String targetDbPath,
+    Directory appSupportDir,
+  ) async {
+    try {
+      final targetFile = File(targetDbPath);
+      if (await targetFile.exists() && (await targetFile.length()) > 0) {
+        return; // Current target DB already exists with data
+      }
+
+      // Potential alternative/legacy locations
+      final candidates = <String>[
+        p.join(
+          appSupportDir.parent.path,
+          'accountingmyanmar',
+          'databases',
+          'accounting_myanmar.db',
+        ),
+        p.join(
+          appSupportDir.parent.path,
+          'Accounting Myanmar',
+          'databases',
+          'accounting_myanmar.db',
+        ),
+        p.join(appSupportDir.path, 'accounting_myanmar.db'),
+      ];
+
+      for (final candidate in candidates) {
+        if (p.canonicalize(candidate) == p.canonicalize(targetDbPath)) continue;
+        final candidateFile = File(candidate);
+        if (await candidateFile.exists() &&
+            (await candidateFile.length()) > 0) {
+          debugPrint(
+            '[SqliteDatabaseService] Migrating database from legacy path: $candidate -> $targetDbPath',
+          );
+          if (!await targetFile.parent.exists()) {
+            await targetFile.parent.create(recursive: true);
+          }
+          await candidateFile.copy(targetDbPath);
+
+          // Copy WAL/SHM companion files if present
+          final wal = File('$candidate-wal');
+          if (await wal.exists()) {
+            await wal.copy('$targetDbPath-wal');
+          }
+          final shm = File('$candidate-shm');
+          if (await shm.exists()) {
+            await shm.copy('$targetDbPath-shm');
+          }
+          break;
+        }
+      }
+    } catch (e) {
+      debugPrint('[SqliteDatabaseService] Legacy DB migration check error: $e');
+    }
+  }
+
+  @override
+  Future<String> getDatabasePath() async {
+    if (_dbPath != null) return _dbPath!;
+    final defaultDatabasesPath = await getDatabasesPath();
+    return p.join(defaultDatabasesPath, 'accounting_myanmar.db');
+  }
+
+  @override
+  Future<int> getDatabaseSizeInBytes() async {
+    final path = await getDatabasePath();
+    final file = File(path);
+    if (await file.exists()) {
+      return await file.length();
+    }
+    return 0;
+  }
+
+  @override
+  Future<List<int>> exportDatabaseBytes() async {
+    // Flush write-ahead logging (WAL) into main database file
+    if (_db != null && _db!.isOpen) {
+      try {
+        await _db!.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+      } catch (e) {
+        debugPrint('[SqliteDatabaseService] wal_checkpoint note: $e');
+      }
+    }
+    final path = await getDatabasePath();
+    final file = File(path);
+    if (!await file.exists()) {
+      throw StateError('Database file does not exist at $path');
+    }
+    return await file.readAsBytes();
+  }
+
+  @override
+  Future<void> importDatabaseFromBytes(List<int> bytes) async {
+    // 1. Validation: Minimum 100 bytes and valid SQLite header
+    if (bytes.length < 100) {
+      throw const FormatException(
+        'ဖိုင်အရွယ်အစား သေးငယ်လွန်းပါသည် (Invalid file size for SQLite database)',
+      );
+    }
+    // SQLite header: "SQLite format 3\0"
+    const sqliteHeader = [
+      0x53,
+      0x51,
+      0x4c,
+      0x69,
+      0x74,
+      0x65,
+      0x20,
+      0x66,
+      0x6f,
+      0x72,
+      0x6d,
+      0x61,
+      0x74,
+      0x20,
+      0x33,
+      0x00,
+    ];
+    for (int i = 0; i < sqliteHeader.length; i++) {
+      if (bytes[i] != sqliteHeader[i]) {
+        throw const FormatException(
+          'တရားဝင် SQLite Database ဖိုင် မဟုတ်ပါ (Not a valid SQLite 3 database header)',
+        );
+      }
+    }
+
+    final path = await getDatabasePath();
+    final currentFile = File(path);
+    final backupPath = '$path.rollback.bak';
+    final backupFile = File(backupPath);
+
+    // 2. Create rollback backup of current DB if it exists
+    if (await currentFile.exists()) {
+      await currentFile.copy(backupPath);
+    }
+
+    try {
+      // 3. Close open database connection
+      await close();
+
+      // 4. Clean up any existing WAL / SHM files
+      final walFile = File('$path-wal');
+      if (await walFile.exists()) await walFile.delete();
+      final shmFile = File('$path-shm');
+      if (await shmFile.exists()) await shmFile.delete();
+
+      // 5. Overwrite the database file with imported bytes
+      if (!await currentFile.parent.exists()) {
+        await currentFile.parent.create(recursive: true);
+      }
+      await currentFile.writeAsBytes(bytes, flush: true);
+
+      // 6. Re-open database and verify integrity
+      await init(dbPathOverride: path);
+
+      // Verify we can read tables
+      await _db!.rawQuery('SELECT 1 FROM accounts LIMIT 1');
+
+      // 7. Cleanup rollback backup file on success
+      if (await backupFile.exists()) {
+        await backupFile.delete();
+      }
+    } catch (e) {
+      // Rollback on failure
+      debugPrint('[SqliteDatabaseService] Import failed, rolling back: $e');
+      if (await backupFile.exists()) {
+        await close();
+        await backupFile.copy(path);
+        await backupFile.delete();
+        await init(dbPathOverride: path);
+      }
+      rethrow;
     }
   }
 }

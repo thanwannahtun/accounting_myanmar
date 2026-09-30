@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../data/models/print_config.dart';
 import '../../data/models/user_profile.dart';
@@ -17,6 +18,11 @@ class SettingsState extends Equatable {
   final String? geminiApiKey;
   final int totalAccountsCount;
   final int totalTransactionsCount;
+  final String? databasePath;
+  final int? databaseSizeBytes;
+  final bool isExportingDb;
+  final bool isImportingDb;
+  final bool isImportingCsv;
   final String? message;
   final String? errorMessage;
 
@@ -38,6 +44,11 @@ class SettingsState extends Equatable {
     this.geminiApiKey,
     this.totalAccountsCount = 0,
     this.totalTransactionsCount = 0,
+    this.databasePath,
+    this.databaseSizeBytes,
+    this.isExportingDb = false,
+    this.isImportingDb = false,
+    this.isImportingCsv = false,
     this.message,
     this.errorMessage,
   });
@@ -56,6 +67,11 @@ class SettingsState extends Equatable {
     String? geminiApiKey,
     int? totalAccountsCount,
     int? totalTransactionsCount,
+    String? databasePath,
+    int? databaseSizeBytes,
+    bool? isExportingDb,
+    bool? isImportingDb,
+    bool? isImportingCsv,
     String? message,
     String? errorMessage,
   }) {
@@ -72,7 +88,13 @@ class SettingsState extends Equatable {
       isScanningPrinters: isScanningPrinters ?? this.isScanningPrinters,
       geminiApiKey: geminiApiKey ?? this.geminiApiKey,
       totalAccountsCount: totalAccountsCount ?? this.totalAccountsCount,
-      totalTransactionsCount: totalTransactionsCount ?? this.totalTransactionsCount,
+      totalTransactionsCount:
+          totalTransactionsCount ?? this.totalTransactionsCount,
+      databasePath: databasePath ?? this.databasePath,
+      databaseSizeBytes: databaseSizeBytes ?? this.databaseSizeBytes,
+      isExportingDb: isExportingDb ?? this.isExportingDb,
+      isImportingDb: isImportingDb ?? this.isImportingDb,
+      isImportingCsv: isImportingCsv ?? this.isImportingCsv,
       message: message,
       errorMessage: errorMessage,
     );
@@ -93,6 +115,11 @@ class SettingsState extends Equatable {
     geminiApiKey,
     totalAccountsCount,
     totalTransactionsCount,
+    databasePath,
+    databaseSizeBytes,
+    isExportingDb,
+    isImportingDb,
+    isImportingCsv,
     message,
     errorMessage,
   ];

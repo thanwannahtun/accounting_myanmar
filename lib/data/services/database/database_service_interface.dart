@@ -21,7 +21,10 @@ abstract class DatabaseServiceInterface {
 
   // Seeding and storage management
   Future<bool> hasData();
-  Future<void> seedInitialData(List<Account> accounts, List<JournalEntry> entries);
+  Future<void> seedInitialData(
+    List<Account> accounts,
+    List<JournalEntry> entries,
+  );
   Future<void> clearSampleData();
   Future<void> clearAllData();
 
@@ -29,4 +32,10 @@ abstract class DatabaseServiceInterface {
   Future<String?> getSetting(String key);
   Future<void> setSetting(String key, String value);
   Future<void> removeSetting(String key);
+
+  // Database file backup & restore
+  Future<String> getDatabasePath();
+  Future<int> getDatabaseSizeInBytes();
+  Future<List<int>> exportDatabaseBytes();
+  Future<void> importDatabaseFromBytes(List<int> bytes);
 }

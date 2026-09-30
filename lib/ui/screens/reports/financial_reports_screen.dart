@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../data/services/database/sqlite_database_service.dart';
 import '../../../logic/account/account_cubit.dart';
 import '../../../logic/journal/journal_entry_cubit.dart';
 import '../../../logic/reports/financial_reports_cubit.dart';
@@ -95,6 +96,31 @@ class _FinancialReportsScreenState extends State<FinancialReportsScreen>
                       context: context,
                       builder: (ctx) => ExportDialog(result: res),
                     );
+                  }
+                },
+              ),
+              // Import CSV Button
+              IconButton(
+                tooltip: 'Import CSV (CSV ဖိုင်မှ စာရင်းသွင်းမည်)',
+                icon: const Icon(
+                  Icons.file_upload_outlined,
+                  color: AppColors.primaryGreen,
+                ),
+                onPressed: () async {
+                  final result = await context
+                      .read<SettingsCubit>()
+                      .importCsvFile(SqliteDatabaseService.instance);
+                  if (result != null && context.mounted) {
+                    final accountCubit = context.read<AccountCubit>();
+                    final journalCubit = context.read<JournalEntryCubit>();
+                    await accountCubit.loadAccounts();
+                    await journalCubit.loadJournalEntries();
+                    if (context.mounted) {
+                      context.read<FinancialReportsCubit>().recompute(
+                            accounts: accountCubit.state.accounts,
+                            transactions: journalCubit.state.entries,
+                          );
+                    }
                   }
                 },
               ),

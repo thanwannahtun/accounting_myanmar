@@ -114,6 +114,37 @@ class ExportDialog extends StatelessWidget {
       );
     }
 
+    Future<void> saveAs() async {
+      try {
+        final uri = await ExportService.instance.saveCsvWithPicker(
+          fileName: result.fileName,
+          csvContent: result.csvContent,
+        );
+        if (uri != null && context.mounted) {
+          final displayPath = uri.scheme == 'file'
+              ? uri.toFilePath()
+              : uri.path;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'CSV ဖိုင်ကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ: $displayPath',
+              ),
+              backgroundColor: AppColors.primaryGreen,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('ဖိုင်သိမ်းဆည်းရာတွင် အမှားဖြစ်ပေါ်ပါသည်: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+
     if (isMobile) {
       return Dialog.fullscreen(
         child: Scaffold(
@@ -135,21 +166,37 @@ class ExportDialog extends StatelessWidget {
                 color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                 border: Border(
                   top: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: isDark
+                        ? AppColors.darkBorder
+                        : AppColors.lightBorder,
                   ),
                 ),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: copyCsv,
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy CSV'),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: copyCsv,
+                          icon: const Icon(Icons.copy, size: 16),
+                          label: const Text('Copy CSV'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: saveAs,
+                          icon: const Icon(Icons.save_alt, size: 16),
+                          label: const Text('Save As...'),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
@@ -171,7 +218,7 @@ class ExportDialog extends StatelessWidget {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: const BoxConstraints(maxWidth: 580),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -196,7 +243,10 @@ class ExportDialog extends StatelessWidget {
                   const Expanded(
                     child: Text(
                       'Excel / CSV ဒေတာထုတ်ယူပြီးပါပြီ',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -208,15 +258,22 @@ class ExportDialog extends StatelessWidget {
               const Divider(height: 24),
               _buildBody(context, isDark),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   TextButton.icon(
                     onPressed: copyCsv,
                     icon: const Icon(Icons.copy, size: 16),
                     label: const Text('CSV စာသားကူးယူ (Copy CSV)'),
                   ),
-                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    onPressed: saveAs,
+                    icon: const Icon(Icons.save_alt, size: 16),
+                    label: const Text('ဖိုင်သိမ်းဆည်းမည် (Save As)'),
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryGreen,

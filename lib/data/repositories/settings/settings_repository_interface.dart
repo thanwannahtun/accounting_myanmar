@@ -16,4 +16,14 @@ abstract class SettingsRepositoryInterface {
 
   Future<String> getDefaultPrinter();
   Future<void> setDefaultPrinter(String printerName);
+
+  // Database Backup & Restore
+  Future<String> getDatabasePath();
+  Future<int> getDatabaseSizeInBytes();
+  Future<List<int>> exportDatabaseBytes();
+  Future<void> importDatabaseFromBytes(List<int> bytes);
+
+  // Settings persistence
+  Future<String?> getSetting(String key);
+  Future<void> setSetting(String key, String value);
 }
