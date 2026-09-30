@@ -8,8 +8,14 @@ import 'env.dart';
 /// On Android, it uses EncryptedSharedPreferences.
 /// On Windows, it uses the Windows Credential Locker.
 class SecureStorageService {
-  SecureStorageService._();
+  final Map<String, String>? _inMemory;
+
+  SecureStorageService._([this._inMemory]);
   static final SecureStorageService instance = SecureStorageService._();
+
+  /// Creates an in-memory instance for testing without native platform channels.
+  factory SecureStorageService.inMemory([Map<String, String>? initial]) =>
+      SecureStorageService._(initial != null ? Map.from(initial) : {});
 
   // Android: use EncryptedSharedPreferences
   // iOS/macOS: uses Keychain
@@ -29,6 +35,9 @@ class SecureStorageService {
 
   /// Read a value by [key].
   Future<String?> read(String key) async {
+    if (_inMemory != null) {
+      return _inMemory[key];
+    }
     try {
       return await _storage.read(key: key);
     } catch (e) {
@@ -39,6 +48,10 @@ class SecureStorageService {
 
   /// Write a [value] for [key].
   Future<void> write(String key, String value) async {
+    if (_inMemory != null) {
+      _inMemory[key] = value;
+      return;
+    }
     try {
       await _storage.write(key: key, value: value);
     } catch (e) {
@@ -48,6 +61,10 @@ class SecureStorageService {
 
   /// Delete a single [key].
   Future<void> delete(String key) async {
+    if (_inMemory != null) {
+      _inMemory.remove(key);
+      return;
+    }
     try {
       await _storage.delete(key: key);
     } catch (e) {
@@ -57,6 +74,10 @@ class SecureStorageService {
 
   /// Delete all stored secrets (logout).
   Future<void> deleteAll() async {
+    if (_inMemory != null) {
+      _inMemory.clear();
+      return;
+    }
     try {
       await _storage.deleteAll();
     } catch (e) {

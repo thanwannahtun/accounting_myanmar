@@ -59,10 +59,10 @@ class PrintersSettingsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.08),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.2),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
@@ -157,7 +157,7 @@ class PrintersSettingsScreen extends StatelessWidget {
                               (isSelected
                                       ? AppColors.primaryGreen
                                       : Colors.grey)
-                                  .withOpacity(0.12),
+                                  .withValues(alpha: 0.12),
                           child: Icon(
                             Icons.print,
                             color: isSelected

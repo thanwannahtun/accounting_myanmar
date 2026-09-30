@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/app_colors.dart';
 
 class AddApiKeyDialog extends StatefulWidget {
@@ -83,29 +84,44 @@ class _AddApiKeyDialogState extends State<AddApiKeyDialog> {
               decoration: InputDecoration(
                 hintText: 'AIzaSy...',
                 suffixIcon: IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, size: 18),
+                  icon: Icon(
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
                   onPressed: () => setState(() => _obscureText = !_obscureText),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.assetBlue.withOpacity(0.08),
+                color: AppColors.assetBlue.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.assetBlue.withOpacity(0.2)),
+                border: Border.all(
+                  color: AppColors.assetBlue.withValues(alpha: 0.2),
+                ),
               ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: AppColors.assetBlue, size: 16),
+                  Icon(
+                    Icons.info_outline,
+                    color: AppColors.assetBlue,
+                    size: 16,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'API Key ကို aistudio.google.com မှ အခမဲ့ ရယူနိုင်ပါသည်။ Settings မှလည်း အချိန်မရွေး ပြန်လည် ပြင်ဆင်နိုင်ပါသည်။',
-                      style: TextStyle(fontSize: 11, color: AppColors.assetBlue),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.assetBlue,
+                      ),
                     ),
                   ),
                 ],

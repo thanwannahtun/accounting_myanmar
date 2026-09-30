@@ -151,7 +151,45 @@ A dedicated test suite was created in `test/data_export_import_test.dart` and ex
 
 ### Execution Output:
 ```
-00:02 +34: All tests passed!
+00:06 +38: All tests passed!
 ```
-- Total tests: **34 passed (100% pass rate)**.
-- Static analysis: **0 errors**.
+- Total tests: **38 passed (100% pass rate)**.
+- Static analysis: **0 issues found**.
+
+---
+
+## 8. 🤖 AI Model Selection & AI Assistant Screen Enhancements
+
+**Execution Date**: September 30, 2026  
+**Target Screens**:
+- `AiSettingsScreen` (`lib/ui/screens/settings/screens/ai_settings_screen.dart`)
+- `AiAssistantScreen` (`lib/ui/screens/ai_assistant/ai_assistant_screen.dart`)
+
+### Root Cause of Previous AI Model Issues:
+1. In `AiSettingsScreen`, `_selectedModel` was purely a local widget state variable initialized statically. It was never written to `SettingsCubit`, SQLite `app_settings`, or `SecureStorage`.
+2. When navigating away and returning, the selection reverted to default.
+3. `AiAssistantCubit.submitPrompt` did not forward any selected model to `AiAssistantRepositoryInterface.sendMessage`, causing the repository to permanently fallback to hardcoded default.
+4. Model responses in `AiAssistantScreen` used plain `SelectableText`, leaving raw markdown (`###`, `**`, `-`, tables) unformatted and hard to read.
+
+### Enhancements Implemented:
+1. **Full-Stack AI Model Persistence**:
+   - Added `getSelectedModel()` and `saveSelectedModel(String model)` to `AiAssistantRepositoryInterface` and `AiAssistantRepositoryImpl`.
+   - Wired model persistence in both `SettingsCubit` (`selectAiModel`) and `AiAssistantCubit` (`setModel`), persisting both to encrypted storage and `app_settings`.
+   - `AiAssistantCubit.submitPrompt` dynamically passes `state.selectedModel` to `sendMessage`.
+   - `AiSettingsScreen` dropdown allows selection across recommended tiers (`gemini-3.8-flash` recommended flagship, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`), and supports custom model IDs safely without dropdown crashes.
+2. **Rich Markdown Formatting (`flutter_markdown_plus`)**:
+   - Upgraded AI responses with `MarkdownBody` with Myanmar Unicode font (`Pyidaungsu`) and Latin font typography.
+   - Beautiful bold text, headings (`h1`–`h4`), formatted double-entry accounting tables, blockquotes with primary green borders, and monospace code blocks.
+   - Interactive link clicks launch external URLs using `url_launcher`.
+3. **Copy & Action Suite**:
+   - Added a **"Copy"** button on each AI response bubble with temporary checkmark feedback and floating SnackBar.
+   - Added a **"Regenerate"** button on the latest AI message to re-submit with the active model.
+   - Added an interactive **"Clear Conversation"** confirmation dialog to prevent accidental chat history loss.
+   - Added active model chip in AppBar allowing direct navigation to AI settings.
+   - Added quick Burmese accounting prompt suggestion chips (`Double-entry`, `COGS`, `Balance Sheet`, `Prepaid Expense`, etc.).
+   - Desktop and keyboard friendly: Enter key sends prompt; Shift+Enter creates a new line.
+   - Added scroll-to-bottom Floating Action Button when reviewing previous messages.
+4. **Zero-Warning Static Analysis & 38 Passing Tests**:
+   - Eliminated deprecated `value` and `withOpacity` calls in favor of `initialValue` and `withValues(alpha: ...)`.
+   - 38 automated unit and widget tests passing cleanly.
+

@@ -154,7 +154,7 @@ lib/
 - Chat history UI with bubble styling, thinking spinner, and quick suggestion chips.
 
 ### G. Comprehensive Settings Hub
-- **AI Settings Screen**: Manage Gemini API key, test connection, switch AI models (`gemini-2.5-flash`, `gemini-1.5-pro`).
+- **AI Settings Screen**: Manage Gemini API key, test connection, switch AI models (`gemini-3.8-flash`, `gemini-3.1-flash-lite`).
 - **Storage Management Screen**: SQLite database statistics, Load Sample Data, Clear Sample Data, and Clear All Data (with caution confirmation modal).
 - **Profile Management Screen**: Business name, owner name, phone, email, category, currency, fiscal year.
 - **Printers Configuration Screen**: Device scanning animation, discovered Bluetooth/WiFi/USB printer list, and active default printer selector.

@@ -8,12 +8,14 @@ class AiAssistantRepositoryImpl implements AiAssistantRepositoryInterface {
   final SecureStorageService _secureStorage;
 
   static const String _geminiApiKeyStorageKey = 'gemini_api_key_secure_storage';
+  static const String _geminiModelStorageKey = 'selected_gemini_model';
+  static const String defaultModel = 'gemini-3.8-flash';
 
   AiAssistantRepositoryImpl({
     GeminiAiService? aiService,
     SecureStorageService? secureStorage,
-  })  : _aiService = aiService ?? GeminiAiService(),
-        _secureStorage = secureStorage ?? SecureStorageService.instance;
+  }) : _aiService = aiService ?? GeminiAiService(),
+       _secureStorage = secureStorage ?? SecureStorageService.instance;
 
   @override
   Future<String?> getApiKey() async {
@@ -31,6 +33,23 @@ class AiAssistantRepositoryImpl implements AiAssistantRepositoryInterface {
   }
 
   @override
+  Future<String> getSelectedModel() async {
+    final model = await _secureStorage.read(_geminiModelStorageKey);
+    if (model != null && model.trim().isNotEmpty) {
+      return model.trim();
+    }
+    return defaultModel;
+  }
+
+  @override
+  Future<void> saveSelectedModel(String model) async {
+    final clean = model.trim();
+    if (clean.isNotEmpty) {
+      await _secureStorage.write(_geminiModelStorageKey, clean);
+    }
+  }
+
+  @override
   Future<String> sendMessage({
     required List<AiMessage> history,
     String? model,
@@ -39,10 +58,14 @@ class AiAssistantRepositoryImpl implements AiAssistantRepositoryInterface {
     if (apiKey == null || apiKey.isEmpty) {
       throw Exception('NO_API_KEY');
     }
+    final activeModel = (model != null && model.trim().isNotEmpty)
+        ? model.trim()
+        : await getSelectedModel();
+
     return _aiService.sendMessage(
       apiKey: apiKey,
       history: history,
-      model: model ?? 'gemini-2.5-flash',
+      model: activeModel,
     );
   }
 

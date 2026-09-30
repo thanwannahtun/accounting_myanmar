@@ -16,6 +16,7 @@ class SettingsState extends Equatable {
   final List<String> availablePrinters;
   final bool isScanningPrinters;
   final String? geminiApiKey;
+  final String selectedAiModel;
   final int totalAccountsCount;
   final int totalTransactionsCount;
   final String? databasePath;
@@ -42,6 +43,7 @@ class SettingsState extends Equatable {
     ],
     this.isScanningPrinters = false,
     this.geminiApiKey,
+    this.selectedAiModel = 'gemini-3.8-flash',
     this.totalAccountsCount = 0,
     this.totalTransactionsCount = 0,
     this.databasePath,
@@ -65,6 +67,7 @@ class SettingsState extends Equatable {
     List<String>? availablePrinters,
     bool? isScanningPrinters,
     String? geminiApiKey,
+    String? selectedAiModel,
     int? totalAccountsCount,
     int? totalTransactionsCount,
     String? databasePath,
@@ -87,6 +90,7 @@ class SettingsState extends Equatable {
       availablePrinters: availablePrinters ?? this.availablePrinters,
       isScanningPrinters: isScanningPrinters ?? this.isScanningPrinters,
       geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+      selectedAiModel: selectedAiModel ?? this.selectedAiModel,
       totalAccountsCount: totalAccountsCount ?? this.totalAccountsCount,
       totalTransactionsCount:
           totalTransactionsCount ?? this.totalTransactionsCount,
@@ -113,6 +117,7 @@ class SettingsState extends Equatable {
     availablePrinters,
     isScanningPrinters,
     geminiApiKey,
+    selectedAiModel,
     totalAccountsCount,
     totalTransactionsCount,
     databasePath,

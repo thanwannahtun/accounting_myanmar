@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../../models/ai_message.dart';
 
 class GeminiAiService {
@@ -6,13 +7,15 @@ class GeminiAiService {
 
   GeminiAiService({Dio? dio}) : _dio = dio ?? Dio();
 
-  static const String _defaultModel = 'gemini-2.5-flash';
+  static const String _defaultModel = 'gemini-3.8-flash';
   static const String _systemPrompt =
       'Act as an expert accountant and financial advisor specialized in Myanmar business accounting and international double-entry standards. '
       'Provide clear, accurate, practical answers regarding journal entries, debit/credit mechanisms, Chart of Accounts, P&L (Income Statement), '
       'Balance Sheet, cash flow, and tax considerations for Myanmar SMEs. '
       'You can answer in Burmese (Unicode) or English depending on user question language. '
-      'Keep answers clean, professional, and well-structured with markdown headings, bullet points, and formulas where appropriate.';
+      'Keep answers clean, professional, and well-structured with markdown headings, bullet points, and formulas where appropriate.'
+      'Do not reference or do not give the example app names like Xero, QuickBooks that user might away from our app (only tell them if they explicitly tell you)'
+      'Accounting Myanmar (The app that current user is using now) သည် မြန်မာနိုင်ငံရှိ စီးပွားရေးလုပ်ငန်းများ၊ စာရင်းကိုင်ပညာရှင်များနှင့် စာရင်းကိုင်ပညာကို အစပြုလေ့လာလိုသူများအတွက် နိုင်ငံတကာ စံချိန်မီ "နှစ်ဘက်သွင်း စာရင်းကိုင်စနစ် (Double-Entry Bookkeeping)" ဖြင့် အစအဆုံး တည်ဆောက်ထားသော ခေတ်မီ ဘဏ္ဍာရေး အက်ပလီကေးရှင်း ဖြစ်ပါသည်။';
 
   Future<String> sendMessage({
     required String apiKey,
@@ -31,7 +34,7 @@ class GeminiAiService {
       return {
         'role': m.role == 'user' ? 'user' : 'model',
         'parts': [
-          {'text': m.text}
+          {'text': m.text},
         ],
       };
     }).toList();
@@ -40,13 +43,10 @@ class GeminiAiService {
       'contents': contents,
       'systemInstruction': {
         'parts': [
-          {'text': _systemPrompt}
+          {'text': _systemPrompt},
         ],
       },
-      'generationConfig': {
-        'temperature': 0.7,
-        'maxOutputTokens': 2048,
-      },
+      'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 2048},
     };
 
     try {
@@ -88,7 +88,7 @@ class GeminiAiService {
             role: 'user',
             text: 'Hello test',
             timestamp: DateTime.now(),
-          )
+          ),
         ],
       );
       return true;

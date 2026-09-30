@@ -25,6 +25,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   static const String currentAppVersion = '1.0.0+2';
   static const String _geminiApiKeyStorageKey = 'gemini_api_key_secure_storage';
+  static const String _geminiModelStorageKey = 'selected_gemini_model';
   static const String _firstTimeCheckedKey = 'has_prompted_first_time_load';
 
   SettingsCubit({
@@ -72,6 +73,9 @@ class SettingsCubit extends Cubit<SettingsState> {
       final printConfig = await settingsRepository.getPrintConfig();
       final defaultPrinter = await settingsRepository.getDefaultPrinter();
       final geminiApiKey = await _secureStorage.read(_geminiApiKeyStorageKey);
+      final selectedModel = (await _secureStorage.read(_geminiModelStorageKey)) ??
+          (await settingsRepository.getSetting('selected_ai_model')) ??
+          'gemini-3.8-flash';
 
       final accounts = await accountRepository.getAccounts();
       final transactions = await journalRepository.getJournalEntries();
@@ -86,6 +90,7 @@ class SettingsCubit extends Cubit<SettingsState> {
           printConfig: printConfig,
           defaultPrinter: defaultPrinter,
           geminiApiKey: geminiApiKey,
+          selectedAiModel: selectedModel,
           totalAccountsCount: accounts.length,
           totalTransactionsCount: transactions.length,
           databasePath: dbPath,
@@ -264,6 +269,19 @@ class SettingsCubit extends Cubit<SettingsState> {
       state.copyWith(
         geminiApiKey: null,
         message: 'Gemini API Key ကို ဖျက်ပစ်ပြီးပါပြီ။ (API key removed)',
+      ),
+    );
+  }
+
+  Future<void> selectAiModel(String model) async {
+    final clean = model.trim();
+    if (clean.isEmpty) return;
+    await _secureStorage.write(_geminiModelStorageKey, clean);
+    await settingsRepository.setSetting('selected_ai_model', clean);
+    emit(
+      state.copyWith(
+        selectedAiModel: clean,
+        message: 'AI Model ကို "$clean" သို့ ပြောင်းလဲသတ်မှတ်ပြီးပါပြီ။ (AI Model updated)',
       ),
     );
   }

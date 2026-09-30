@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../data/models/ai_message.dart';
 import '../../data/repositories/ai/ai_assistant_repository_interface.dart';
@@ -15,6 +16,7 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
 
   Future<void> init() async {
     final key = await _repository.getApiKey();
+    final model = await _repository.getSelectedModel();
     final hasKey = key != null && key.trim().isNotEmpty;
 
     final initialMessages = [
@@ -25,13 +27,23 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
       ),
     ];
 
-    emit(state.copyWith(
-      status: BlocStatus.initial,
-      hasApiKey: hasKey,
-      apiKey: key,
-      messages: initialMessages,
-      requiresApiKeyPrompt: false,
-    ));
+    emit(
+      state.copyWith(
+        status: BlocStatus.initial,
+        hasApiKey: hasKey,
+        apiKey: key,
+        selectedModel: model,
+        messages: initialMessages,
+        requiresApiKeyPrompt: false,
+      ),
+    );
+  }
+
+  Future<void> setModel(String model) async {
+    final clean = model.trim();
+    if (clean.isEmpty) return;
+    await _repository.saveSelectedModel(clean);
+    emit(state.copyWith(selectedModel: clean));
   }
 
   Future<void> submitPrompt(String text) async {
@@ -42,10 +54,7 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
     final hasKey = key != null && key.trim().isNotEmpty;
 
     if (!hasKey) {
-      emit(state.copyWith(
-        requiresApiKeyPrompt: true,
-        pendingPrompt: prompt,
-      ));
+      emit(state.copyWith(requiresApiKeyPrompt: true, pendingPrompt: prompt));
       return;
     }
 
@@ -55,42 +64,69 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
       timestamp: DateTime.now(),
     );
 
-    final updatedMessages = List<AiMessage>.from(state.messages)..add(userMessage);
+    final updatedMessages = List<AiMessage>.from(state.messages)
+      ..add(userMessage);
 
-    emit(state.copyWith(
-      status: BlocStatus.loading,
-      messages: updatedMessages,
-      pendingPrompt: null,
-      errorMessage: null,
-    ));
+    emit(
+      state.copyWith(
+        status: BlocStatus.loading,
+        messages: updatedMessages,
+        pendingPrompt: null,
+        errorMessage: null,
+      ),
+    );
 
     try {
-      final replyText = await _repository.sendMessage(history: updatedMessages);
+      final replyText = await _repository.sendMessage(
+        history: updatedMessages,
+        model: state.selectedModel,
+      );
       final modelMessage = AiMessage(
         role: 'model',
         text: replyText,
         timestamp: DateTime.now(),
       );
 
-      emit(state.copyWith(
-        status: BlocStatus.success,
-        messages: List<AiMessage>.from(updatedMessages)..add(modelMessage),
-      ));
+      emit(
+        state.copyWith(
+          status: BlocStatus.success,
+          messages: List<AiMessage>.from(updatedMessages)..add(modelMessage),
+        ),
+      );
     } catch (e) {
       final errorMsg = e.toString().replaceAll('Exception: ', '');
-      emit(state.copyWith(
-        status: BlocStatus.failure,
-        errorMessage: errorMsg,
-        messages: List<AiMessage>.from(updatedMessages)
-          ..add(
-            AiMessage(
-              role: 'model',
-              text: 'တောင်းပန်ပါတယ်။ အခုချိန်တွင် ဖြေကြားပေးရန် အခက်အခဲရှိနေပါသည်။ ($errorMsg)',
-              timestamp: DateTime.now(),
+      emit(
+        state.copyWith(
+          status: BlocStatus.failure,
+          errorMessage: errorMsg,
+          messages: List<AiMessage>.from(updatedMessages)
+            ..add(
+              AiMessage(
+                role: 'model',
+                text:
+                    'တောင်းပန်ပါတယ်။ အခုချိန်တွင် ဖြေကြားပေးရန် အခက်အခဲရှိနေပါသည်။ ($errorMsg)',
+                timestamp: DateTime.now(),
+              ),
             ),
-          ),
-      ));
+        ),
+      );
     }
+  }
+
+  Future<void> retryLastPrompt() async {
+    if (state.status == BlocStatus.loading) return;
+    int lastUserIdx = -1;
+    for (int i = state.messages.length - 1; i >= 0; i--) {
+      if (state.messages[i].isUser) {
+        lastUserIdx = i;
+        break;
+      }
+    }
+    if (lastUserIdx == -1) return;
+    final lastUserPrompt = state.messages[lastUserIdx].text;
+    final trimmed = state.messages.sublist(0, lastUserIdx);
+    emit(state.copyWith(messages: trimmed));
+    await submitPrompt(lastUserPrompt);
   }
 
   Future<void> saveApiKeyAndResume(String apiKey) async {
@@ -100,12 +136,14 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
     await _repository.saveApiKey(cleanKey);
     final promptToRun = state.pendingPrompt;
 
-    emit(state.copyWith(
-      hasApiKey: true,
-      apiKey: cleanKey,
-      requiresApiKeyPrompt: false,
-      pendingPrompt: null,
-    ));
+    emit(
+      state.copyWith(
+        hasApiKey: true,
+        apiKey: cleanKey,
+        requiresApiKeyPrompt: false,
+        pendingPrompt: null,
+      ),
+    );
 
     if (promptToRun != null && promptToRun.isNotEmpty) {
       await submitPrompt(promptToRun);
@@ -113,30 +151,26 @@ class AiAssistantCubit extends Cubit<AiAssistantState> {
   }
 
   void cancelApiKeyPrompt() {
-    emit(state.copyWith(
-      requiresApiKeyPrompt: false,
-      pendingPrompt: null,
-    ));
+    emit(state.copyWith(requiresApiKeyPrompt: false, pendingPrompt: null));
   }
 
   Future<void> removeApiKey() async {
     await _repository.removeApiKey();
-    emit(state.copyWith(
-      hasApiKey: false,
-      apiKey: null,
-    ));
+    emit(state.copyWith(hasApiKey: false, apiKey: null));
   }
 
   void clearConversation() {
-    emit(state.copyWith(
-      messages: [
-        AiMessage(
-          role: 'model',
-          text: _welcomeMessage,
-          timestamp: DateTime.now(),
-        ),
-      ],
-      errorMessage: null,
-    ));
+    emit(
+      state.copyWith(
+        messages: [
+          AiMessage(
+            role: 'model',
+            text: _welcomeMessage,
+            timestamp: DateTime.now(),
+          ),
+        ],
+        errorMessage: null,
+      ),
+    );
   }
 }
