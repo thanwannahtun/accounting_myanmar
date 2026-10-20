@@ -3,9 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/update/app_update.dart';
 import '../../../cubit/theme_mode/theme_mode_cubit.dart';
 import '../../../logic/settings/settings_cubit.dart';
 import '../../../logic/settings/settings_state.dart';
+import '../../../logic/update/app_update_cubit.dart';
+import '../../../logic/update/app_update_state.dart';
 import 'screens/ai_settings_screen.dart';
 import 'screens/print_config_screen.dart';
 import 'screens/printers_settings_screen.dart';
@@ -21,11 +24,44 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings (ဆက်တင်များ)')),
-      body: BlocBuilder<SettingsCubit, SettingsState>(
-        builder: (context, state) {
-          final profile = state.userProfile;
+    return BlocConsumer<AppUpdateCubit, AppUpdateState>(
+      listener: (context, updateState) {
+        if (updateState.isManualCheck) {
+          if (updateState.status == AppUpdateStatus.updateAvailable) {
+            UpdateDialog.show(context);
+          } else if (updateState.status == AppUpdateStatus.upToDate) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'နောက်ဆုံးထွက် ဗားရှင်း (${updateState.currentVersion.fullDisplay}) ကို အသုံးပြုနေပါသည်',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                backgroundColor: AppColors.primaryGreen,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          } else if (updateState.status == AppUpdateStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  updateState.errorMessage ?? 'အဆင့်မြှင့်တင်မှု စစ်ဆေး၍ မရပါ',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      },
+      builder: (context, updateState) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Settings (ဆက်တင်များ)')),
+          body: BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (context, state) {
+              final profile = state.userProfile;
 
           return ListView(
             padding: EdgeInsets.symmetric(
@@ -307,6 +343,90 @@ class SettingsScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
+              // Section: App Version & Updates
+              _buildSectionTitle(
+                'VERSION & UPDATES (ဗားရှင်းနှင့် အဆင့်မြှင့်တင်မှု)',
+                isDark,
+              ),
+              Card(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: (updateState.hasUpdateAvailable
+                                ? Colors.amber
+                                : AppColors.primaryGreen)
+                            .withValues(alpha: 0.12),
+                        child: updateState.isChecking
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(
+                                updateState.hasUpdateAvailable
+                                    ? Icons.system_update_rounded
+                                    : Icons.published_with_changes_rounded,
+                                color: updateState.hasUpdateAvailable
+                                    ? Colors.amber.shade700
+                                    : AppColors.primaryGreen,
+                                size: 20,
+                              ),
+                      ),
+                      title: Row(
+                        children: [
+                          const Text(
+                            'Check for Updates (ဗားရှင်း စစ်ဆေးမည်)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (updateState.hasUpdateAvailable) ...[
+                            const SizedBox(width: 8),
+                            const UpdateBadge(label: 'NEW'),
+                          ],
+                        ],
+                      ),
+                      subtitle: Text(
+                        updateState.isChecking
+                            ? 'Checking GitHub latest releases...'
+                            : updateState.hasUpdateAvailable
+                                ? 'Update available: ${updateState.latestVersion} (Tap to install)'
+                                : 'Current: ${updateState.currentVersion.fullDisplay} • Tap to check',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: updateState.hasUpdateAvailable
+                              ? Colors.amber.shade800
+                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                          fontWeight: updateState.hasUpdateAvailable
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: updateState.isChecking
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.chevron_right, size: 20),
+                      onTap: () {
+                        if (updateState.hasUpdateAvailable) {
+                          UpdateDialog.show(context);
+                        } else {
+                          context
+                              .read<AppUpdateCubit>()
+                              .checkForUpdates(force: true);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
               // Section: App About (Clickable)
               Card(
                 clipBehavior: Clip.antiAlias,
@@ -326,13 +446,21 @@ class SettingsScreen extends StatelessWidget {
                               color: AppColors.primaryGreen,
                             ),
                             const SizedBox(width: 8),
-                            const Expanded(
-                              child: Text(
-                                'Accounting Myanmar v1.0.0',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Accounting Myanmar ${updateState.currentVersion.displayVersion}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (updateState.hasUpdateAvailable) ...[
+                                    const SizedBox(width: 8),
+                                    const UpdateBadge(),
+                                  ],
+                                ],
                               ),
                             ),
                             Container(
@@ -387,6 +515,8 @@ class SettingsScreen extends StatelessWidget {
         },
       ),
     );
+  },
+);
   }
 
   Widget _buildSectionTitle(String title, bool isDark) {

@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class FakeAiAssistantRepository implements AiAssistantRepositoryInterface {
   String? apiKey;
@@ -210,6 +211,14 @@ void main() {
     testWidgets('Renders MarkdownBody and Copy button for AI response', (
       tester,
     ) async {
+      PackageInfo.setMockInitialValues(
+        appName: 'Accounting Myanmar',
+        packageName: 'com.thanwannahtun.business.accountingmyanmar.accountingmyanmar',
+        version: '1.0.0',
+        buildNumber: '2',
+        buildSignature: '',
+      );
+
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (MethodCall methodCall) async {

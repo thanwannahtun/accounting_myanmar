@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/route_util/route_names.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/update/app_update.dart';
 import '../../../core/widgets/confirm_exit_wrapper.dart';
+import '../../../logic/update/app_update_cubit.dart';
 import '../accounts/chart_of_accounts_screen.dart';
 import '../ai_assistant/ai_assistant_screen.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -69,6 +72,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final updateState = context.watch<AppUpdateCubit>().state;
+    final hasUpdate = updateState.hasUpdateAvailable;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -145,41 +150,51 @@ class _MainShellScreenState extends State<MainShellScreen> {
                                 ],
                               ),
                             ),
-                            destinations: const [
-                              NavigationRailDestination(
+                            destinations: [
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.dashboard_outlined),
                                 selectedIcon: Icon(Icons.dashboard),
                                 label: Text('Dashboard'),
                               ),
-                              NavigationRailDestination(
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.swap_horiz_outlined),
                                 selectedIcon: Icon(Icons.swap_horiz),
                                 label: Text('Entries'),
                               ),
-                              NavigationRailDestination(
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.menu_book_outlined),
                                 selectedIcon: Icon(Icons.menu_book),
                                 label: Text('Accounts'),
                               ),
-                              NavigationRailDestination(
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.format_list_numbered_outlined),
                                 selectedIcon: Icon(Icons.format_list_numbered),
                                 label: Text('Ledger'),
                               ),
-                              NavigationRailDestination(
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.bar_chart_outlined),
                                 selectedIcon: Icon(Icons.bar_chart),
                                 label: Text('Reports'),
                               ),
-                              NavigationRailDestination(
+                              const NavigationRailDestination(
                                 icon: Icon(Icons.smart_toy_outlined),
                                 selectedIcon: Icon(Icons.smart_toy),
                                 label: Text('AI Assistant'),
                               ),
                               NavigationRailDestination(
-                                icon: Icon(Icons.settings_outlined),
-                                selectedIcon: Icon(Icons.settings),
-                                label: Text('Settings'),
+                                icon: Badge(
+                                  isLabelVisible: hasUpdate,
+                                  smallSize: 8,
+                                  backgroundColor: Colors.amber.shade700,
+                                  child: const Icon(Icons.settings_outlined),
+                                ),
+                                selectedIcon: Badge(
+                                  isLabelVisible: hasUpdate,
+                                  smallSize: 8,
+                                  backgroundColor: Colors.amber.shade700,
+                                  child: const Icon(Icons.settings),
+                                ),
+                                label: const Text('Settings'),
                               ),
                             ],
                             trailing: Padding(
@@ -383,11 +398,71 @@ class _MainShellScreenState extends State<MainShellScreen> {
                         ListTile(
                           leading: const Icon(Icons.settings_outlined),
                           title: const Text('Settings (ဆက်တင်များ)'),
+                          trailing: hasUpdate
+                              ? const UpdateBadge(label: 'NEW')
+                              : null,
                           onTap: () {
                             Navigator.of(context).pop();
                             _navigateToIndex(6, false);
                           },
                         ),
+                      ],
+                    ),
+                  ),
+                  // Drawer bottom version & update bar
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          updateState.currentVersion.displayVersion,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (hasUpdate)
+                          UpdateBadge(
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              UpdateDialog.show(context);
+                            },
+                          )
+                        else
+                          InkWell(
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              _navigateToIndex(6, false);
+                              context
+                                  .read<AppUpdateCubit>()
+                                  .checkForUpdates(force: true);
+                            },
+                            child: const Text(
+                              'Check Updates',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: AppColors.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

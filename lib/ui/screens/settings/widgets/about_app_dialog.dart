@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/route_util/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/update/app_update.dart';
+import '../../../../logic/update/app_update_cubit.dart';
 
 class AboutAppDialog extends StatelessWidget {
   const AboutAppDialog({super.key});
@@ -57,29 +60,50 @@ class AboutAppDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Accounting Myanmar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'ဗားရှင်း v1.0.0 • Modern ERP System',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.primaryGreen,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        final updateState = context.watch<AppUpdateCubit>().state;
+                        final versionDisplay = updateState.currentVersion.displayVersion;
+                        final hasUpdate = updateState.hasUpdateAvailable;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Accounting Myanmar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Text(
+                                  'ဗားရှင်း $versionDisplay • Modern ERP System',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (hasUpdate) ...[
+                                  const SizedBox(width: 6),
+                                  UpdateBadge(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                      UpdateDialog.show(context);
+                                    },
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   IconButton(

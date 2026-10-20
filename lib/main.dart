@@ -6,6 +6,7 @@ import 'core/bloc_utils/app_bloc_observer.dart';
 import 'core/route_util/route_generator.dart';
 import 'core/route_util/route_names.dart';
 import 'core/theme/app_theme.dart';
+import 'core/update/app_update.dart';
 import 'cubit/theme_mode/theme_mode_cubit.dart';
 import 'data/repositories/account/account_local_repository.dart';
 import 'data/repositories/account/account_repository_interface.dart';
@@ -25,6 +26,7 @@ import 'logic/journal/journal_entry_cubit.dart';
 import 'logic/ledger/general_ledger_cubit.dart';
 import 'logic/reports/financial_reports_cubit.dart';
 import 'logic/settings/settings_cubit.dart';
+import 'logic/update/app_update_cubit.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -66,9 +68,28 @@ class MyApp extends StatelessWidget {
         RepositoryProvider<ArticleRepositoryInterface>(
           create: (_) => ArticleRepositoryImpl(),
         ),
+        RepositoryProvider<AppUpdateServiceInterface>(
+          create: (_) => GithubAppUpdateService(
+            config: UpdateConfig(
+              githubOwner: 'thanwannahtun',
+              githubRepo: 'accounting_myanmar',
+              destinationFilename: 'AccountingMyanmar-latest.apk',
+            ),
+            storage: RepositoryUpdateStorage(
+              reader: (key) => SqliteDatabaseService.instance.getSetting(key),
+              writer: (key, value) =>
+                  SqliteDatabaseService.instance.setSetting(key, value),
+            ),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
+          BlocProvider<AppUpdateCubit>(
+            create: (context) => AppUpdateCubit(
+              updateService: context.read<AppUpdateServiceInterface>(),
+            )..init(),
+          ),
           BlocProvider<ThemeModeCubit>(
             create: (_) => ThemeModeCubit(ThemeMode.system)..init(),
           ),

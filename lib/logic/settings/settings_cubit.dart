@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/bloc_utils/bloc_status.dart';
 import '../../core/secure_storage_service.dart';
@@ -56,10 +57,22 @@ class SettingsCubit extends Cubit<SettingsState> {
           hasPromptedInDb || hasPromptedInSecure || (lastAppVersion != null);
       final isFirstTime = !hasCompletedBefore && !hasData;
 
+      // Resolve version dynamically from package_info_plus
+      String currentVersionTag = currentAppVersion;
+      try {
+        final pkg = await PackageInfo.fromPlatform()
+            .timeout(const Duration(milliseconds: 500));
+        if (pkg.version.isNotEmpty) {
+          currentVersionTag = pkg.buildNumber.isNotEmpty
+              ? '${pkg.version}+${pkg.buildNumber}'
+              : pkg.version;
+        }
+      } catch (_) {}
+
       // Update version tag in database
       await settingsRepository.setSetting(
         'last_app_version',
-        currentAppVersion,
+        currentVersionTag,
       );
       if (hasData || !isFirstTime) {
         await settingsRepository.setSetting('first_time_prompted', 'true');
