@@ -63,460 +63,477 @@ class SettingsScreen extends StatelessWidget {
             builder: (context, state) {
               final profile = state.userProfile;
 
-          return ListView(
-            padding: EdgeInsets.symmetric(
-              horizontal: MediaQuery.sizeOf(context).width * 0.05,
-              vertical: 16,
-            ),
-            children: [
-              // Business Profile Banner Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor: AppColors.primaryGreen.withValues(
-                          alpha: 0.15,
-                        ),
-                        child: const Icon(
-                          Icons.business,
-                          color: AppColors.primaryGreen,
-                          size: 28,
-                        ),
+              return ListView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.sizeOf(context).width * 0.05,
+                  vertical: 16,
+                ),
+                children: [
+                  // Business Profile Banner Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 26,
+                            backgroundColor: AppColors.primaryGreen.withValues(
+                              alpha: 0.15,
+                            ),
+                            child: const Icon(
+                              Icons.business,
+                              color: AppColors.primaryGreen,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  profile.companyName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${profile.ownerName} • ${profile.businessType}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Fiscal Year: ${profile.fiscalYear} | Currency: ${profile.currency}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              profile.companyName,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${profile.ownerName} • ${profile.businessType}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Fiscal Year: ${profile.fiscalYear} | Currency: ${profile.currency}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.primaryGreen,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-              // Section: Core System Settings
-              _buildSectionTitle('CORE SETTINGS (အဓိက စနစ်ဆက်တင်များ)', isDark),
-              Card(
-                child: Column(
-                  children: [
-                    _buildSettingsTile(
-                      icon: Icons.smart_toy,
-                      iconColor: AppColors.primaryGreen,
-                      title: 'AI Configuration (AI ဆက်တင်များ)',
-                      subtitle:
-                          state.geminiApiKey != null &&
-                              state.geminiApiKey!.isNotEmpty
-                          ? 'Gemini API Key: Configured (သိမ်းဆည်းပြီး)'
-                          : 'Gemini API Key: Not configured (မထည့်ရသေး)',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const AiSettingsScreen(),
-                          ),
-                        );
-                      },
+                  // Section: Core System Settings
+                  _buildSectionTitle(
+                    'CORE SETTINGS (အဓိက စနစ်ဆက်တင်များ)',
+                    isDark,
+                  ),
+                  Card(
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.smart_toy,
+                          iconColor: AppColors.primaryGreen,
+                          title: 'AI Configuration (AI ဆက်တင်များ)',
+                          subtitle:
+                              state.geminiApiKey != null &&
+                                  state.geminiApiKey!.isNotEmpty
+                              ? 'Gemini API Key: Configured (သိမ်းဆည်းပြီး)'
+                              : 'Gemini API Key: Not configured (မထည့်ရသေး)',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const AiSettingsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1),
+                        _buildSettingsTile(
+                          icon: Icons.storage,
+                          iconColor: AppColors.assetBlue,
+                          title:
+                              'Storage & Database (ဒေတာဘေ့စ် စီမံခန့်ခွဲမှု)',
+                          subtitle: 'Load sample data, clear sample, backup warning, SQLite stats',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const StorageSettingsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1),
+                        _buildSettingsTile(
+                          icon: Icons.person_outline,
+                          iconColor: AppColors.equityPurple,
+                          title: 'Profile Management (လုပ်ငန်းပရိုဖိုင်)',
+                          subtitle: 'Company details, owner name, phone, email, currency',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ProfileSettingsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    const Divider(height: 1),
-                    _buildSettingsTile(
-                      icon: Icons.storage,
-                      iconColor: AppColors.assetBlue,
-                      title: 'Storage & Database (ဒေတာဘေ့စ် စီမံခန့်ခွဲမှု)',
-                      subtitle: 'Load sample data, clear sample, backup warning, SQLite stats',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const StorageSettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    _buildSettingsTile(
-                      icon: Icons.person_outline,
-                      iconColor: AppColors.equityPurple,
-                      title: 'Profile Management (လုပ်ငန်းပရိုဖိုင်)',
-                      subtitle:
-                          'Company details, owner name, phone, email, currency',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ProfileSettingsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-              // Section: Printing & Hardware
-              _buildSectionTitle(
-                'PRINTING & HARDWARE (ပုံနှိပ်ခြင်းနှင့် စက်ပစ္စည်း)',
-                isDark,
-              ),
-              Card(
-                child: Column(
-                  children: [
-                    _buildSettingsTile(
-                      icon: Icons.print,
-                      iconColor: Colors.teal,
-                      title: 'Printers Configuration (ပရင်တာ ချိတ်ဆက်မှု)',
-                      subtitle: 'Active: ${state.defaultPrinter}',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PrintersSettingsScreen(),
-                          ),
-                        );
-                      },
+                  // Section: Printing & Hardware
+                  _buildSectionTitle(
+                    'PRINTING & HARDWARE (ပုံနှိပ်ခြင်းနှင့် စက်ပစ္စည်း)',
+                    isDark,
+                  ),
+                  Card(
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.print,
+                          iconColor: Colors.teal,
+                          title: 'Printers Configuration (ပရင်တာ ချိတ်ဆက်မှု)',
+                          subtitle: 'Active: ${state.defaultPrinter}',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const PrintersSettingsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1),
+                        _buildSettingsTile(
+                          icon: Icons.receipt_long,
+                          iconColor: Colors.deepOrange,
+                          title: 'Print Format Configuration (ပုံနှိပ်ပုံစံ ဆက်တင်)',
+                          subtitle:
+                              'Header, slogan, footer, paper format (${state.printConfig.paperFormat}), signatures',
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const PrintConfigScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    const Divider(height: 1),
-                    _buildSettingsTile(
-                      icon: Icons.receipt_long,
-                      iconColor: Colors.deepOrange,
-                      title:
-                          'Print Format Configuration (ပုံနှိပ်ပုံစံ ဆက်တင်)',
-                      subtitle:
-                          'Header, slogan, footer, paper format (${state.printConfig.paperFormat}), signatures',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const PrintConfigScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-              // Section: App Appearance & Language
-              _buildSectionTitle(
-                'PREFERENCES (အသွင်အပြင်နှင့် ဘာသာစကား)',
-                isDark,
-              ),
-              Card(
-                child: Column(
-                  children: [
-                    BlocBuilder<ThemeModeCubit, ThemeMode>(
-                      builder: (context, themeMode) {
-                        return ListTile(
+                  // Section: App Appearance & Language
+                  _buildSectionTitle(
+                    'PREFERENCES (အသွင်အပြင်နှင့် ဘာသာစကား)',
+                    isDark,
+                  ),
+                  Card(
+                    child: Column(
+                      children: [
+                        BlocBuilder<ThemeModeCubit, ThemeMode>(
+                          builder: (context, themeMode) {
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.amber.withValues(
+                                  alpha: 0.12,
+                                ),
+                                child: const Icon(
+                                  Icons.brightness_6,
+                                  color: Colors.amber,
+                                  size: 20,
+                                ),
+                              ),
+                              title: const Text(
+                                'Theme Mode (အရောင်ပုံစံ)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Current: ${themeMode.name.toUpperCase()}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              trailing: DropdownButton<ThemeMode>(
+                                value: themeMode,
+                                underline: const SizedBox(),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: ThemeMode.system,
+                                    child: Text('System'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: ThemeMode.light,
+                                    child: Text('Light'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: ThemeMode.dark,
+                                    child: Text('Dark'),
+                                  ),
+                                ],
+                                onChanged: (mode) {
+                                  if (mode != null) {
+                                    context.read<ThemeModeCubit>().toggleTheme(
+                                      mode,
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.amber.withValues(
+                            backgroundColor: Colors.blue.withValues(
                               alpha: 0.12,
                             ),
                             child: const Icon(
-                              Icons.brightness_6,
-                              color: Colors.amber,
+                              Icons.language,
+                              color: Colors.blue,
                               size: 20,
                             ),
                           ),
                           title: const Text(
-                            'Theme Mode (အရောင်ပုံစံ)',
+                            'Language (ဘာသာစကား)',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          subtitle: Text(
-                            'Current: ${themeMode.name.toUpperCase()}',
-                            style: const TextStyle(fontSize: 11),
+                          subtitle: const Text(
+                            'Current: မြန်မာ (Unicode) / English',
+                            style: TextStyle(fontSize: 11),
                           ),
-                          trailing: DropdownButton<ThemeMode>(
-                            value: themeMode,
-                            underline: const SizedBox(),
-                            items: const [
-                              DropdownMenuItem(
-                                value: ThemeMode.system,
-                                child: Text('System'),
-                              ),
-                              DropdownMenuItem(
-                                value: ThemeMode.light,
-                                child: Text('Light'),
-                              ),
-                              DropdownMenuItem(
-                                value: ThemeMode.dark,
-                                child: Text('Dark'),
-                              ),
-                            ],
-                            onChanged: (mode) {
-                              if (mode != null) {
-                                context.read<ThemeModeCubit>().toggleTheme(
-                                  mode,
-                                );
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue.withValues(alpha: 0.12),
-                        child: const Icon(
-                          Icons.language,
-                          color: Colors.blue,
-                          size: 20,
-                        ),
-                      ),
-                      title: const Text(
-                        'Language (ဘာသာစကား)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        'Current: မြန်မာ (Unicode) / English',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                      trailing: const Icon(
-                        Icons.check,
-                        color: AppColors.primaryGreen,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Section: Knowledge Base & Guides
-              _buildSectionTitle(
-                'KNOWLEDGE BASE & GUIDES (ဗဟုသုတနှင့် လမ်းညွှန်များ)',
-                isDark,
-              ),
-              Card(
-                child: Column(
-                  children: [
-                    _buildSettingsTile(
-                      icon: Icons.auto_stories,
-                      iconColor: AppColors.primaryGreen,
-                      title: 'Accounting Articles (စာရင်းကိုင် ဆောင်းပါးများ)',
-                      subtitle: 'Beginner guides, Debit vs Credit, Balance Sheet, P&L, Double Entry & Tech',
-                      onTap: () {
-                        Navigator.of(context).pushNamed(RouteNames.articles);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Section: App Version & Updates
-              _buildSectionTitle(
-                'VERSION & UPDATES (ဗားရှင်းနှင့် အဆင့်မြှင့်တင်မှု)',
-                isDark,
-              ),
-              Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: (updateState.hasUpdateAvailable
-                                ? Colors.amber
-                                : AppColors.primaryGreen)
-                            .withValues(alpha: 0.12),
-                        child: updateState.isChecking
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Icon(
-                                updateState.hasUpdateAvailable
-                                    ? Icons.system_update_rounded
-                                    : Icons.published_with_changes_rounded,
-                                color: updateState.hasUpdateAvailable
-                                    ? Colors.amber.shade700
-                                    : AppColors.primaryGreen,
-                                size: 20,
-                              ),
-                      ),
-                      title: Row(
-                        children: [
-                          const Text(
-                            'Check for Updates (ဗားရှင်း စစ်ဆေးမည်)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (updateState.hasUpdateAvailable) ...[
-                            const SizedBox(width: 8),
-                            const UpdateBadge(label: 'NEW'),
-                          ],
-                        ],
-                      ),
-                      subtitle: Text(
-                        updateState.isChecking
-                            ? 'Checking GitHub latest releases...'
-                            : updateState.hasUpdateAvailable
-                                ? 'Update available: ${updateState.latestVersion} (Tap to install)'
-                                : 'Current: ${updateState.currentVersion.fullDisplay} • Tap to check',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: updateState.hasUpdateAvailable
-                              ? Colors.amber.shade800
-                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                          fontWeight: updateState.hasUpdateAvailable
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: updateState.isChecking
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.chevron_right, size: 20),
-                      onTap: () {
-                        if (updateState.hasUpdateAvailable) {
-                          UpdateDialog.show(context);
-                        } else {
-                          context
-                              .read<AppUpdateCubit>()
-                              .checkForUpdates(force: true);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Section: App About (Clickable)
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () => AboutAppDialog.show(context),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.info_outline,
-                              size: 20,
-                              color: AppColors.primaryGreen,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'Accounting Myanmar ${updateState.currentVersion.displayVersion}',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (updateState.hasUpdateAvailable) ...[
-                                    const SizedBox(width: 8),
-                                    const UpdateBadge(),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withValues(
-                                  alpha: 0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'အသေးစိတ်',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: AppColors.primaryGreen,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 2),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    size: 14,
-                                    color: AppColors.primaryGreen,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Clean Architecture • Double-Entry Bookkeeping Standard • 100% Offline-First (နှိပ်၍ အက်ပ်အကြောင်း အသေးစိတ် ဖတ်ရှုပါ)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          trailing: const Icon(
+                            Icons.check,
+                            color: AppColors.primaryGreen,
+                            size: 20,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          );
-        },
-      ),
+
+                  const SizedBox(height: 20),
+
+                  // Section: Knowledge Base & Guides
+                  _buildSectionTitle(
+                    'KNOWLEDGE BASE & GUIDES (ဗဟုသုတနှင့် လမ်းညွှန်များ)',
+                    isDark,
+                  ),
+                  Card(
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.auto_stories,
+                          iconColor: AppColors.primaryGreen,
+                          title:
+                              'Accounting Articles (စာရင်းကိုင် ဆောင်းပါးများ)',
+                          subtitle: 'Beginner guides, Debit vs Credit, Balance Sheet, P&L, Double Entry & Tech',
+                          onTap: () {
+                            Navigator.of(context)
+                                .pushNamed(RouteNames.articles);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Section: App Version & Updates
+                  _buildSectionTitle(
+                    'VERSION & UPDATES (ဗားရှင်းနှင့် အဆင့်မြှင့်တင်မှု)',
+                    isDark,
+                  ),
+                  Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                (updateState.hasUpdateAvailable
+                                        ? Colors.amber
+                                        : AppColors.primaryGreen)
+                                    .withValues(alpha: 0.12),
+                            child: updateState.isChecking
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    updateState.hasUpdateAvailable
+                                        ? Icons.system_update_rounded
+                                        : Icons.published_with_changes_rounded,
+                                    color: updateState.hasUpdateAvailable
+                                        ? Colors.amber.shade700
+                                        : AppColors.primaryGreen,
+                                    size: 20,
+                                  ),
+                          ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: const Text(
+                                  'Check for Updates (ဗားရှင်း စစ်ဆေးမည်)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              if (updateState.hasUpdateAvailable) ...[
+                                const SizedBox(width: 8),
+                                const UpdateBadge(label: 'NEW'),
+                              ],
+                            ],
+                          ),
+                          subtitle: Text(
+                            updateState.isChecking
+                                ? 'Checking GitHub latest releases...'
+                                : updateState.hasUpdateAvailable
+                                ? 'Update available: ${updateState.latestVersion} (Tap to install)'
+                                : 'Current: ${updateState.currentVersion.fullDisplay} • Tap to check',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: updateState.hasUpdateAvailable
+                                  ? Colors.amber.shade800
+                                  : (isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600]),
+                              fontWeight: updateState.hasUpdateAvailable
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: updateState.isChecking
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.chevron_right, size: 20),
+                          onTap: () {
+                            if (updateState.hasUpdateAvailable) {
+                              UpdateDialog.show(context);
+                            } else {
+                              context.read<AppUpdateCubit>().checkForUpdates(
+                                force: true,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Section: App About (Clickable)
+                  Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => AboutAppDialog.show(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: AppColors.primaryGreen,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'Accounting Myanmar ${updateState.currentVersion.displayVersion}',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (updateState.hasUpdateAvailable) ...[
+                                        const SizedBox(width: 8),
+                                        const UpdateBadge(),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'အသေးစိတ်',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.primaryGreen,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(width: 2),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        size: 14,
+                                        color: AppColors.primaryGreen,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Clean Architecture • Double-Entry Bookkeeping Standard • 100% Offline-First (နှိပ်၍ အက်ပ်အကြောင်း အသေးစိတ် ဖတ်ရှုပါ)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
-  },
-);
   }
 
   Widget _buildSectionTitle(String title, bool isDark) {
